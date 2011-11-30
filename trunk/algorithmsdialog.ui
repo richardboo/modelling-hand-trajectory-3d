@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>253</width>
-    <height>478</height>
+    <width>320</width>
+    <height>496</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,29 +73,39 @@
      <property name="title">
       <string>Algorytm stereo dopasowania</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
+     <layout class="QFormLayout" name="formLayout">
+      <property name="fieldGrowthPolicy">
+       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+      </property>
+      <item row="0" column="0">
        <widget class="QRadioButton" name="radioButtonStereo0">
         <property name="text">
          <string>Block Matching (OpenCV)</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="bmParamsButton">
+        <property name="text">
+         <string>Parametry</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
        <widget class="QRadioButton" name="radioButtonStereo1">
         <property name="text">
          <string>Semi-Global Block Matching (OpenCV)</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QRadioButton" name="radioButtonStereo2">
+      <item row="1" column="1">
+       <widget class="QPushButton" name="sgbmParamsButton">
         <property name="text">
-         <string>Block Matching (OpenCV + CUDA)</string>
+         <string>Parametry</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="3" column="0">
        <widget class="QRadioButton" name="radioButtonStereo3">
         <property name="text">
          <string>Dopasowanie ROI</string>
@@ -105,17 +115,31 @@
         </property>
        </widget>
       </item>
-      <item>
+      <item row="4" column="0">
        <widget class="QRadioButton" name="radioButtonStereo4">
         <property name="text">
          <string>Proste Block Matching na ROI</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="5" column="0">
        <widget class="QRadioButton" name="radioButtonStereo5">
         <property name="text">
          <string>Losowe Color Matching na ROI</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="radioButtonStereo2">
+        <property name="text">
+         <string>Block Matching (OpenCV + CUDA)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="cudaParamsButton">
+        <property name="text">
+         <string>Parametry</string>
         </property>
        </widget>
       </item>
