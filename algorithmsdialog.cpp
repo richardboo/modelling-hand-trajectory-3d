@@ -4,6 +4,7 @@
 #include <QList>
 #include <QAbstractButton>
 
+
 AlgorithmsDialog::AlgorithmsDialog(QWidget *parent)
 	: QDialog(parent)
 {
@@ -12,8 +13,7 @@ AlgorithmsDialog::AlgorithmsDialog(QWidget *parent)
 	initUI();
 }
 
-AlgorithmsDialog::~AlgorithmsDialog()
-{
+AlgorithmsDialog::~AlgorithmsDialog(){
 
 }
 
@@ -21,6 +21,10 @@ void AlgorithmsDialog::initUI(){
 
 	lightDialog = new LightDialog(this);
 	backgroundDialog = new BackgroundDialog(this);
+
+	sgbmDialog = new SGBMDialog(this);
+	bmDialog = new BMDialog(this, false);
+	cudaDialog = new BMDialog(this, true);
 
 	connect(ui.buttonGetLight,	SIGNAL(clicked()),
 			this,				SLOT(showLightDialogClicked()));
@@ -33,6 +37,27 @@ void AlgorithmsDialog::initUI(){
 
 	connect(backgroundDialog,	SIGNAL(accepted()),
 			this,				SLOT(bkgChanged()));
+
+
+	connect(ui.bmParamsButton,	SIGNAL(clicked()),
+			this,				SLOT(showBMParamsClicked()));
+	
+	connect(ui.sgbmParamsButton,	SIGNAL(clicked()),
+			this,				SLOT(showSGBMParamsClicked()));
+	
+	connect(ui.cudaParamsButton,	SIGNAL(clicked()),
+			this,				SLOT(showCUDAParamsClicked()));
+
+
+	connect(sgbmDialog,	SIGNAL(accepted()),
+			this,				SLOT(bmChanged()));
+
+	connect(bmDialog,	SIGNAL(accepted()),
+			this,				SLOT(sgbmChanged()));
+
+	connect(cudaDialog,	SIGNAL(accepted()),
+			this,				SLOT(cudaChanged()));
+
 	
 	// algorytmy stereo dopasowania
 	stereoGroup = new QButtonGroup(this);
@@ -95,4 +120,28 @@ void AlgorithmsDialog::lightChanged(){
 }
 void AlgorithmsDialog::bkgChanged(){
 	ui.labelBkg->setText(Settings::instance()->getBkgString());
+}
+
+void AlgorithmsDialog::showBMParamsClicked(){
+	bmDialog->exec();
+}
+
+void AlgorithmsDialog::showSGBMParamsClicked(){
+	sgbmDialog->exec();
+}
+
+void AlgorithmsDialog::showCUDAParamsClicked(){
+	cudaDialog->exec();
+}
+
+void AlgorithmsDialog::bmChanged(){
+	
+}
+
+void AlgorithmsDialog::sgbmChanged(){
+	
+}
+
+void AlgorithmsDialog::cudaChanged(){
+
 }

@@ -23,8 +23,9 @@ public:
 	int stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs[2], Blob * hands[2], IplImage * disparity, int type);
 	void stereoProcessMine(IplImage* rectified[2], IplImage * blobs[2], Blob * hands[2], IplImage * disparity, int type);
 
-	cv::StereoSGBM sgbm;
-	CvStereoBMState * BMState;
+	static cv::StereoSGBM sgbm;
+	static CvStereoBMState BMState;
+	static CvStereoBMState BMStateCuda;
 	IplImage * disparityNotNormalized, * andImage;
 	IplImage * onlyHandNormalized[2];
 

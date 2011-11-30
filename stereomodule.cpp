@@ -4,6 +4,10 @@
 #include "settings.h"
 
 
+cv::StereoSGBM StereoModule::sgbm;
+CvStereoBMState StereoModule::BMState;
+CvStereoBMState StereoModule::BMStateCuda;
+
 StereoModule::StereoModule(void)
 {
 }
@@ -16,17 +20,23 @@ StereoModule::~StereoModule(void)
 
 void StereoModule::stereoStart(CvSize & size){
 	
-	BMState = cvCreateStereoBMState();
-    BMState->preFilterSize=7;
-    BMState->preFilterCap=21;
-    BMState->SADWindowSize=21;
-    BMState->minDisparity=0;
-    BMState->numberOfDisparities=64;
-    BMState->textureThreshold=1;
-    BMState->uniquenessRatio=1;
-	BMState->roi1 = cvRect(0, 0, size.width, size.height);
-	BMState->roi2 = cvRect(0, 0, size.width, size.height);
+	//BMState = cvCreateStereoBMState();
+    /*
+	BMState.preFilterSize=7;
+    BMState.preFilterCap=21;
+    BMState.SADWindowSize=21;
+    BMState.minDisparity=0;
+    BMState.numberOfDisparities=64;
+    BMState.textureThreshold=1;
+    BMState.uniquenessRatio=1;
+	*/
+	BMState.roi1 = cvRect(0, 0, size.width, size.height);
+	BMState.roi2 = cvRect(0, 0, size.width, size.height);
 
+	BMStateCuda.roi1 = cvRect(0, 0, size.width, size.height);
+	BMStateCuda.roi2 = cvRect(0, 0, size.width, size.height);
+
+	/*
 	sgbm.preFilterCap = 31;
     sgbm.SADWindowSize = 11;
     sgbm.P1 = 2*8*sgbm.SADWindowSize*sgbm.SADWindowSize;
@@ -37,6 +47,9 @@ void StereoModule::stereoStart(CvSize & size){
     sgbm.speckleWindowSize = 400;
     sgbm.speckleRange = 16;
     sgbm.disp12MaxDiff = 2;
+	*/
+	sgbm.P1 = 2*8*sgbm.SADWindowSize*sgbm.SADWindowSize;
+    sgbm.P2 = 2*32*sgbm.SADWindowSize*sgbm.SADWindowSize;
     sgbm.fullDP = false;
 
 	disparityNotNormalized = cvCreateImage(size, IPL_DEPTH_16S, 1);
@@ -69,7 +82,7 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		*/
 	}
 	else if(type == BM_){
-		cvFindStereoCorrespondenceBM( rectifiedGray[0], rectifiedGray[1], disparityNotNormalized, BMState);
+		cvFindStereoCorrespondenceBM( rectifiedGray[0], rectifiedGray[1], disparityNotNormalized, &BMState);
 		cvNormalize( disparityNotNormalized, andImage, 0, 256, CV_MINMAX );
 	}
 	else if(type == SGBM_){

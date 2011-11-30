@@ -9,6 +9,8 @@
 #include "lightdialog.h"
 #include "backgrounddialog.h"
 #include "settings.h"
+#include "sgbmdialog.h"
+#include "bmdialog.h"
 
 class AlgorithmsDialog : public QDialog
 {
@@ -24,6 +26,10 @@ private:
 	LightDialog * lightDialog;
 	BackgroundDialog * backgroundDialog;
 
+	SGBMDialog * sgbmDialog;
+	BMDialog * bmDialog;
+	BMDialog * cudaDialog;
+
 	QButtonGroup * stereoGroup;
 	QButtonGroup * segmGroup;
 
@@ -34,11 +40,19 @@ private slots:
 	void showLightDialogClicked();
 	void showBkgDialogClicked();
 
+	void showBMParamsClicked();
+	void showSGBMParamsClicked();
+	void showCUDAParamsClicked();
+
 	void segmButtonClicked(int id);
 	void stereoButtonClicked(int id);
 
 	void lightChanged();
 	void bkgChanged();
+
+	void bmChanged();
+	void sgbmChanged();
+	void cudaChanged();
 };
 
 #endif // ALGORITHMSDIALOG_H
