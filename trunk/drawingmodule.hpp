@@ -9,6 +9,8 @@ public:
 	~DrawingModule();
 
 	void drawFPSonFrame(int fps, IplImage * frame);
+	void drawRectOnFrame(CvRect & rect, IplImage * frame);
+	void drawSmallerRectOnFrame(CvRect & rect, IplImage * frame, CvScalar & color);
 	void drawSamplesOnFrame(int samples, IplImage * frame);
 	void drawTextOnFrame(char * text, IplImage * frame);
 	void drawDispOnFrame(int disp, IplImage * dispIm, IplImage * dispToShow);

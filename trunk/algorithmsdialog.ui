@@ -204,6 +204,13 @@
      </layout>
     </widget>
    </item>
+   <item>
+    <widget class="QPushButton" name="startStopTrajectoryButton">
+     <property name="text">
+      <string>Start/stop pobierania trajektorii</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

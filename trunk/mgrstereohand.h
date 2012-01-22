@@ -101,6 +101,7 @@ private:
 
 	// wykryte dlonie
 	Blob * hand[2];
+	Blob * head[2];
 
 	// okna
 	MyWindow * leftCamWindow;
@@ -174,6 +175,8 @@ private slots:
 	void changeShowImage(int value);
 	void sizeButtonClicked(int id);
 	void calibrateButtonClicked();
+
+	void startStopTrajectoryClicked();
 
 	void exit();
 

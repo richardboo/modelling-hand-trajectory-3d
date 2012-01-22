@@ -13,12 +13,15 @@ public:
 	void showImage(IplImage * frame);
 	void showHalfSizeImage(IplImage * frame);
 	void hide();
+	void setXY(int xx, int yy);
 
 	const char * name;
 
 private:
 	
 	int width;
+	bool shown;
+	int x, y;
 
 	IplImage * smallerC, *smallerG;
 };

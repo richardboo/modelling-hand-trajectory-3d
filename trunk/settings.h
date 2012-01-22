@@ -28,6 +28,10 @@
 #define MINE_BM_ 4
 #define MINE_RND_ 5
 
+#define NONE 3
+#define OCCLUSION 2
+#define FACE 1
+#define OK_FACE_HAND 0
 
 class Settings
 {

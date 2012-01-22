@@ -7,6 +7,10 @@ BGMask::BGMask(void){
 
 BGMask::~BGMask(void){
 	cvReleaseImage(&foregroundSmaller);
+	cvReleaseImage(&imageGray);
+	cvReleaseImage(&imageDiff);
+	cvReleaseImage(&bigImageDiff);
+	cvReleaseImage(&onlyForeground);
 }
 
 void BGMask::init(int resize, IplImage * frame){

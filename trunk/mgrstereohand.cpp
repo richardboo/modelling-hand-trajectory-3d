@@ -101,7 +101,7 @@ MgrStereoHand::MgrStereoHand(QWidget *parent, Qt::WFlags flags)
 	startRecognized[0] = startRecognized[1] = 0;
 	lastStart[0] = lastStart[1] = false;
 
-	hand[0] = hand[1] = NULL;
+	hand[0] = hand[1] = head[0] = head[0] = NULL;
 }
 
 MgrStereoHand::~MgrStereoHand(){
@@ -135,6 +135,8 @@ MgrStereoHand::~MgrStereoHand(){
 
 			if(hand[i] != NULL)
 				delete hand[i];
+			if(head[i] != NULL)
+				delete head[i];
 		}
 
 		cvReleaseImage(&blackImage);
@@ -178,19 +180,7 @@ void MgrStereoHand::mainIdleLoop(){
 		trajectoryWindow->showImage(blackImage);
 		disparityWindow->showImage(blackImage);
 	}
-/*
-	hand[0] = new Blob;
-	for(int i = 0; i < 100; ++i){
-		hand[0]->lastPoint = cvPoint(10+i, 100+i);
-		hand[0]->setLastPointWithZ(220-i);
-	}
-	for(int i = 0; i < 100; ++i){
-		hand[0]->lastPoint = cvPoint(110-i, 200+i);
-		hand[0]->setLastPointWithZ(120-i);
-	}
-	saveTrajectory();
-	return;
-*/
+
 	if(!nothing){
 
 		if(!checkIfStart()){
@@ -235,7 +225,7 @@ void MgrStereoHand::mainLoop(){
 
 	CvRect rect =cvRect(0, 
 						0, 
-						Settings::instance()->defSize.width/2,
+						Settings::instance()->defSize.width,
 						Settings::instance()->defSize.height);
 
 	if(!calibration){
@@ -286,7 +276,9 @@ void MgrStereoHand::mainLoop(){
 					skinDetection[i]->skinFound = true;
 
 					// ustawienie wskaznika na twarz, aby mozna bylo znalezc dlon
-					handDetection[i]->head = &faceDetection[i]->head;
+					head[i] = &faceDetection[i]->head;
+					// dawne
+					// handDetection[i]->head = &faceDetection[i]->head;
 				}
 
 				// po przejsciu calej petli - jesli mamy juz w obydwu znaleziona skore -konczymy
@@ -302,12 +294,24 @@ void MgrStereoHand::mainLoop(){
 					
 					cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 					cvAddWeighted(frameGray[i], ALPHA_BG, frameBackground[i], (1.0-ALPHA_BG), 0.0, frameBackground[i]);
-					
+					if(faceDetection[i]->lastFound.x == -1){
+						faceDetection[i]->findHeadHaar(frameRectified[i]);
+					}
 				}
 				currentBgFrames++;
 
-				if(currentBgFrames >= BG_UPDATE_FRAMES){
+				// wylaczamy dopiero jak chociaz raz byla rozpoznana twarz
+				if(currentBgFrames >= BG_UPDATE_FRAMES && 
+					faceDetection[0]->lastFound.x > -1 &&
+					faceDetection[1]->lastFound.x > -1){
+
 					stateBack = STATE_AFTER_BACK;
+					cvSetImageROI(frameBackground[0], faceDetection[0]->lastFound);
+					cvSetImageROI(frameBackground[1], faceDetection[1]->lastFound);
+					cvSet(frameBackground[0], cvScalarAll(0));
+					cvSet(frameBackground[1], cvScalarAll(0));
+					cvResetImageROI(frameBackground[0]);
+					cvResetImageROI(frameBackground[1]);
 				}
 			}
 			else{
@@ -325,24 +329,52 @@ void MgrStereoHand::mainLoop(){
 			//cvShowImage("diff", frameDiff[0]);
 		}
 
-		bool handFound[2];
-		handFound[0] = false;
-		handFound[1] = false;
+		int handFound[2];
+		handFound[0] = 3;
+		handFound[1] = 3;
+		// dawne
+		// bool handFound[2];
+		// handFound[0] = false;
+		// handFound[1] = false;
 		bool changeStart = false;
 		#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(int i = 0; i < 2; ++i){
 			skinDetection[i]->detectSkin(frameRectified[i], frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 		
-			handFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
+			// dawne
+			//handFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
+			//if(handFound[i]){
+		/*
+			cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
+			cvZero(frameGray[1]);
+			cvCopy(frameGray[i], frameGray[1], frameSkin[i]);
 			
-			if(handFound[i]){
+			IplImage * contour = cvCreateImage(cvGetSize(frameSkin[i]), IPL_DEPTH_8U, 1);
+			cvCanny( frameGray[1], contour, 10, 200, 5);
+			cvDilate(contour, contour);
+
+			IplImage * contourColor = cvCreateImage(cvGetSize(frameSkin[i]), IPL_DEPTH_8U, 3);
+			cvCvtColor(contour, contourColor, CV_GRAY2BGR);
+			cvAdd(frameRectified[i], contourColor, contourColor, frameSkin[i]);
+
+			cvFloodFill(contourColor, cvPoint(200, 200), cvScalarAll(255), cvScalarAll(40), cvScalarAll(40));
+
+			cvShowImage("contour", contourColor);
+
+			*/
+			//cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
+
+			handFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
+			
+			if(!handFound[i]){
 				bool start = srModule->isSign(frameBlob[i], hand[i]->lastRect);
-				changeStart = start != lastStart[i];
+				changeStart = (start != lastStart[i]);
 				lastStart[i] = start;
 			}
 			else{
 				
 			}
+		
 		}
 
 		if(changeStart && lastStart[0] == lastStart[1]){
@@ -352,6 +384,8 @@ void MgrStereoHand::mainLoop(){
 
 		qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
 
+		// ONE
+		
 		if(handFound[0] && handFound[1] && (startRecognized[0] == 2)){
 
 			displayOverlay(leftCamWindow->name, "START RECOGNIZED", 1000);
@@ -370,82 +404,11 @@ void MgrStereoHand::mainLoop(){
 
 			cvZero(disparityToShow);
 			disparityWindow->showImage(disparityToShow);
-
-			
 		}
 
 		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
 		trajectoryWindow->showImage(trajectorySmaller);
-
-		/*
-		// tutaj - juz spokojnie tracking dloni i cale przetwarzanie
-		// dlatego ma nawet osobna petle
-		bool handFound = true;
-		for(int i = 0; i < 2; ++i){
-			
-			IplImage * frameToUse = frameRectified[i];
-
-			// usuwanie tla
-			//cvCvtColor(frameToUse, frameGray[i], CV_BGR2GRAY);
-			//if(Settings::getInstance().framesCounter % 200 == 0)
-				//cvAddWeighted(frameGray[i], ALPHA_BG, frameBackground[i], (1.0-ALPHA_BG), 0.0, frameBackground[i]);
-			//cvAbsDiff(frameGray[i], frameBackground[i], frameDiff[i]);
-			//cvThreshold(frameDiff[i], frameDiff[i], backgroundThreshold, 255, CV_THRESH_BINARY);
-
-			// potencjalny prostokat ograniczajacy dlon
-			// albo wiekszy od poprzedniego albo na lewo od twarzy
-			CvRect rect =	//(hand[i]->lastRect.height == -1) ? 
-							cvRect(	0, 
-									faceDetection[i]->lastFound.y, 
-									faceDetection[i]->lastFound.x,
-									Settings::instance()->defSize.height - faceDetection[i]->lastFound.y);// : 
-							//hand[i]->getBiggerRect();
-
-			// teraz wykrywanie skory
-			skinDetection[i]->detectSkin(frameToUse, frameSkin[i], rect, segmantationAlg, frameDiff[i]);
-
-			// i wykrywanie dloni
-			handFound = handFound && handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
-		}
-
-		// a tutaj juz skladamy obraz stereo, jesli sa znalezione dlonie
-		handFound = false;
-		if(handFound){
-			if(stereoAlg < MINE_)
-				stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
-			else
-				stereoModule->stereoProcessMine(frameGray, frameBlob, hand, disparity, stereoAlg);
-			
-			cvResize(disparity, disparitySmaller, CV_INTER_NN);
-			drawingModule->drawDispOnFrame(hand[0]->lastZ, disparitySmaller, disparityToShow);
-			disparityWindow->showImage(disparityToShow);
-		}else{
-			hand[0]->setLastPointWithZ(-1);
-			hand[1]->setLastPointWithZ(-1);
-
-			cvZero(disparityToShow);
-			disparityWindow->showImage(disparityToShow);
-		}
-
-		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
-		trajectoryWindow->showImage(trajectorySmaller);
-			
-*/
-		/*
 		
-		else if(stateBack == STATE_BACK){
-			for(int i = 0; i < 2; ++i){
-				
-				cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
-				cvAddWeighted(frameGray[i], ALPHA_BG, frameBackground[i], (1.0-ALPHA_BG), 0.0, frameBackground[i]);
-				
-			}
-			currentBgFrames++;
-
-			if(currentBgFrames >= BG_UPDATE_FRAMES){
-				stateBack = STATE_AFTER_BACK;
-			}
-		}*/
 	}
 	else{
 	// KALIBRACJA
@@ -493,27 +456,40 @@ void MgrStereoHand::mainLoop(){
 	}
 }
 
+
 void MgrStereoHand::showImages(){
 
 	switch(Settings::instance()->imageType){
 		case 0:
+
 			cvResize(frameShow[0], frameSmaller[0]);//, CV_INTER_NN);
 			cvResize(frameShow[1], frameSmaller[1]);//, CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps, frameSmaller[0]);
+			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
 			leftCamWindow->showImage(frameSmaller[0]);
 			rightCamWindow->showImage(frameSmaller[1]);
 			break;
 		case 1:
+
 			cvResize(frameRectified[0], frameSmaller[0], CV_INTER_NN);
 			cvResize(frameRectified[1], frameSmaller[1], CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps, frameSmaller[0]);
+			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
+
+			for(int i = 0; i < 2; ++i){
+				if(hand[i]->lastRect.x > -1 ){
+					drawingModule->drawSmallerRectOnFrame(hand[i]->lastRect, frameSmaller[i], cvScalar(200,0,0));
+					//drawingModule->drawSmallerRectOnFrame(head[0]->lastRect, frameSmaller[0], cvScalar(0,200,0));
+				}
+				if(head[i]->lastRect.x > -1){
+					drawingModule->drawSmallerRectOnFrame(head[i]->lastRect, frameSmaller[i], cvScalar(0,200,0));
+				}
+			}
 			leftCamWindow->showImage(frameSmaller[0]);
 			rightCamWindow->showImage(frameSmaller[1]);
 			break;
 		case 2:
 			cvResize(frameSkin[0], frameSmallerGray[0], CV_INTER_NN);
 			cvResize(frameSkin[1], frameSmallerGray[1], CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps, frameSmallerGray[0]);
+			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
 			leftCamWindow->showImage(frameSmallerGray[0]);
 			rightCamWindow->showImage(frameSmallerGray[1]);
 			break;
@@ -579,9 +555,16 @@ bool MgrStereoHand::init(){
 
 bool MgrStereoHand::initWindows(){
 	leftCamWindow = new MyWindow("kamera 1");
+	leftCamWindow->setXY(350, 180);
+
 	rightCamWindow = new MyWindow("kamera 2");
+	rightCamWindow->setXY(670, 180);
+	
 	disparityWindow = new MyWindow("mapa glebokosci");
+	disparityWindow->setXY(350, 490);
+
 	trajectoryWindow = new MyWindow("trajektoria");
+	trajectoryWindow->setXY(670, 490);
 
 	return true;
 }
@@ -605,6 +588,8 @@ bool MgrStereoHand::reinitAll(){
 		reinitModules();
 		hand[0] = new Blob();
 		hand[1] = new Blob();
+		head[0] = new Blob();
+		head[1] = new Blob();
 	}
 
 	stateHist = STATE_BEFORE_HIST;
@@ -632,7 +617,13 @@ bool MgrStereoHand::initCameras(){
 	}
 
 	CameraDevice * cam1 = new CameraDevice(0);
+	//CameraDevice * cam2 = cam1;
 	CameraDevice * cam2 = new CameraDevice(1);
+
+	// ONE
+	//cam1->init(Settings::instance()->defSize.width,
+	//			   Settings::instance()->defSize.height);
+
 
 	if(!cam1->init(Settings::instance()->defSize.width,
 				   Settings::instance()->defSize.height) || 
@@ -642,7 +633,6 @@ bool MgrStereoHand::initCameras(){
 		frameGrabber[1] = NULL;
 		return false;
 	}
-		
 
 	frameGrabber[0] = cam1;
 	frameGrabber[1] = cam2;
@@ -826,6 +816,9 @@ void MgrStereoHand::initUI(){
 	connect(ui.buttonStop,		SIGNAL(clicked()),
 			this,				SLOT(stopProcess()));
 
+	connect(ui.startStopTrajectoryButton,	SIGNAL(clicked()),
+			this,				SLOT(startStopTrajectoryClicked()));
+
 	// pokazywane elementy przetwarzania
 	connect(ui.sliderShowImage,	SIGNAL(valueChanged(int)),
 			this,				SLOT(changeShowImage(int)));
@@ -968,6 +961,12 @@ void MgrStereoHand::startProcess(){
 
 void MgrStereoHand::stopProcess(){
 	nothing = true;
+}
+
+void MgrStereoHand::startStopTrajectoryClicked(){
+	if(!nothing){
+		startRecognized[0]=(startRecognized[0] == 2 ? 3 : 2);
+	}
 }
 
 // zakladam, ze timer zostal zatrzymany
@@ -1116,11 +1115,6 @@ void MgrStereoHand::recordFilms(){
 			cvReleaseVideoWriter(&videoWriter0);
 			cvReleaseVideoWriter(&videoWriter1);
 
-			for(int i = 0; i < buffer[0].size() && i < buffer[1].size(); ++i){
-				cvReleaseImage(&buffer[0][i] );
-				cvReleaseImage(&buffer[1][i] );
-			}
-
 			statisticsDialog->trajectory = saveTrajectory();
 
 			saved = true;
@@ -1131,6 +1125,11 @@ void MgrStereoHand::recordFilms(){
 
 	displayOverlay(leftCamWindow->name, saved ? "Zapisano filmy" : "Operacja anulowana", 2000);
 	displayOverlay(rightCamWindow->name, saved ? "Zapisano filmy" : "Operacja anulowana", 2000);
+
+	for(int i = 0; i < buffer[0].size() && i < buffer[1].size(); ++i){
+		cvReleaseImage(&buffer[0][i] );
+		cvReleaseImage(&buffer[1][i] );
+	}
 
 	buffer[0].clear();
 	buffer[1].clear();

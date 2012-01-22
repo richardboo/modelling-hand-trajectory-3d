@@ -38,6 +38,16 @@ void DrawingModule::drawDispOnFrame(int disp, IplImage * dispIm, IplImage * disp
 	cvPutText(dispToShow, strInt, cvPoint(30, 30), &font, cvScalar(0, 0, 200));
 }
 
+void DrawingModule::drawRectOnFrame(CvRect & rect, IplImage * frame){
+	cvDrawRect(frame, cvPoint(rect.x, rect.y), cvPoint(rect.x+rect.width, rect.y+rect.height),
+			cvScalar(200, 0, 0));
+}
+
+void DrawingModule::drawSmallerRectOnFrame(CvRect & rect, IplImage * frame, CvScalar & color){
+	cvDrawRect(frame, cvPoint(rect.x/2, rect.y/2), cvPoint(rect.x/2+rect.width/2, rect.y/2+rect.height/2), color);
+}
+
+
 void DrawingModule::drawFPSonFrame(int fps, IplImage * frame){
 	sprintf(strInt, "%d fps", fps);
 	cvPutText(frame, strInt, cvPoint(30, 30), &font, cvScalar(0, 0, 200));

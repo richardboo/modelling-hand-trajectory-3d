@@ -82,7 +82,7 @@ void SkinDetector::updateHistogram(IplImage * frame, CvRect & rect){
 	skinHistogram.update(temp, rect);
 
 	// troche ciemniejsze
-	cvSubS(temp, cvScalarAll(20), temp);
+	cvSubS(temp, cvScalarAll(10), temp);
 	skinHistogram.update(temp, rect);
 }
 
@@ -97,6 +97,7 @@ void SkinDetector::detectSkin(IplImage * frame, IplImage * skin, CvRect & rect, 
 		case ONLY_BG_:	detectSkinBg(frame, skin, rect, fg);	break;
 	}
 }
+
 
 void SkinDetector::detectSkinRGB(IplImage * frame, IplImage * skin, CvRect & rect){
 	
@@ -124,22 +125,38 @@ void SkinDetector::detectSkinRGB(IplImage * frame, IplImage * skin, CvRect & rec
 			}
 		}
 	}
+
+	cvDilate(skin, skin);
+	cvDilate(skin, skin);
 }
 
 void SkinDetector::detectSkinHSV(IplImage * frame, IplImage * skin, CvRect & rect){
+
 	cvZero(skin);
-
-	cvSetImageROI(skin, rect);
-	cvSetImageROI(frame, rect);
-	cvSetImageROI(temp, rect);
-	
 	cvCvtColor(frame, temp, CV_BGR2HSV);
+	HsvImage hsv(temp);
+	BwImage skin_img(skin);
 
-	cvInRangeS(temp, cvScalar(0, 30, 80), cvScalar(20, 150, 255), skin);
+	HsvPixel pix;
+	
+	for(int i = rect.y; i < rect.y+rect.height; ++i){
+		for(int j = rect.x; j < rect.x+rect.width; ++j){
 
-	cvResetImageROI(temp);
-	cvResetImageROI(skin);
-	cvResetImageROI(frame);
+				pix = hsv[i][j];
+				
+				if(	pix.h < 20 &&
+
+					pix.s > 30 &&
+					pix.s < 150 &&
+
+					pix.v > 80){
+					skin_img[i][j] = 255;
+			}
+		}
+	}
+	cvDilate(skin, skin);
+	
+	cvDilate(skin, skin);
 }
 
 void SkinDetector::detectSkinHist(IplImage * frame, IplImage * skin, CvRect & rect){

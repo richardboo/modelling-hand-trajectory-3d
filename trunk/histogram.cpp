@@ -36,6 +36,7 @@ Histogram::~Histogram() {
 	cvReleaseImage(&hplane);
 	cvReleaseImage(&vplane);
 	cvReleaseImage(&back);
+	cvReleaseImage(&mask);
 }
 
 
