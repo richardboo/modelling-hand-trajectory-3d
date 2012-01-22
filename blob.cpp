@@ -23,6 +23,8 @@ Blob::Blob(void): id(idCounter){
 	radius = -1;
 	lastZ = -1;
 
+	occluded = false;
+
 	idCounter++;
 }
 

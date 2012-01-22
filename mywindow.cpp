@@ -5,10 +5,13 @@ MyWindow::MyWindow(const char * theName): name(theName){
 
 	smallerC = cvCreateImage(cvSize(320,240), 8, 3);
 	smallerG = cvCreateImage(cvSize(320,240), 8, 1);
+	shown = false;
+	x = y = 0;
 }
 
 MyWindow::MyWindow(const char * theName, int theWidth): name(theName), width(theWidth){
-
+	shown = false;
+	x = y = 0;
 }
 
 MyWindow::~MyWindow(){
@@ -33,4 +36,12 @@ void MyWindow::showImage(IplImage * frame){
 
 void MyWindow::hide(){
 	cvDestroyWindow(name);
+	shown = false;
+}
+
+void MyWindow::setXY(int xx, int yy){
+	x = xx;
+	y = yy;
+	cvNamedWindow(name);
+	cvMoveWindow(name, x, y);
 }

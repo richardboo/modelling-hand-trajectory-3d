@@ -9,7 +9,7 @@ CvHaarClassifierCascade	* FaceDetector::cascade = NULL;
 CvMemStorage			* FaceDetector::storage = NULL;
 
 FaceDetector::FaceDetector(){
-	
+	lastFound = cvRect(-1,-1,-1,-1);
 }
 
 FaceDetector::~FaceDetector(){

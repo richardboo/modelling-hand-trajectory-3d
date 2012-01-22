@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "blob.hpp"
+#include "myhandbm.h"
 
 using namespace std;
 using namespace cv; 
@@ -26,8 +27,12 @@ public:
 	static cv::StereoSGBM sgbm;
 	static CvStereoBMState BMState;
 	static CvStereoBMState BMStateCuda;
+	static MyHandBM myHandBMState;
 	IplImage * disparityNotNormalized, * andImage;
 	IplImage * onlyHandNormalized[2];
+
+	// 8 - max disparity dla moich alg
+	//IplImage * diffImage[8];
 
 	Mat disp, disparityNNmat, 
 		m_remap1, m_remap2, m_remapped1, m_remapped2;

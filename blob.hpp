@@ -36,6 +36,8 @@ public:
 	int minArea;
 	int maxArea;
 
+	bool occluded;
+
 	const int id;
 	static int idCounter;
 };
