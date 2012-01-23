@@ -176,8 +176,6 @@ private slots:
 	void sizeButtonClicked(int id);
 	void calibrateButtonClicked();
 
-	void startStopTrajectoryClicked();
-
 	void exit();
 
 	void startCalibrationClickedFromDialog();

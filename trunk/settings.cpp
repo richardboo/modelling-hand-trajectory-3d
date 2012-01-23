@@ -8,6 +8,8 @@ Settings::Settings(void){
 
 	defSize = cvSize(640, 480);
 	defSmallSize = cvSize(320, 240);
+
+	changeTrajectory = false;
 }
 
 Settings::~Settings(void)

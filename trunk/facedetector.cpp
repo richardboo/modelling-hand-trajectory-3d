@@ -29,7 +29,7 @@ bool FaceDetector::init(){
 }
 
 bool FaceDetector::findHeadHaar(IplImage * frame){
-	CvRect biggerLast = head.getBiggerRect();
+	CvRect biggerLast = head.getBiggerRect(20);
 	
 	if(head.lastRect.height != -1)
 		cvSetImageROI(frame, biggerLast);

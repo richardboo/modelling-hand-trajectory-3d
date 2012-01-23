@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QTextStream>
+#include <QDebug>
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -202,6 +203,7 @@ void MgrStereoHand::mainIdleLoop(){
 // 4. odtwarzanie z filmow - wszystko, do momentu skonczenia pobierania klatek
 void MgrStereoHand::mainLoop(){
 
+	try{
 	for(int i = 0; i < 2; ++i){
 		if(!frameGrabber[i]->hasNextFrame()){
 			// TODO jesli jest video to zatrzymanie
@@ -243,7 +245,7 @@ void MgrStereoHand::mainLoop(){
 		
 
 		int i;
-		#pragma omp parallel for shared(frameRectified,frameShow,frame,frameSkin,segmantationAlg,frameDiff) private(i)
+		//#pragma omp parallel for shared(frameRectified,frameShow,frame,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(i = 0; i < 2; ++i){
 
 			//qDebug() << "Hello from thread " << omp_get_thread_num();
@@ -337,7 +339,7 @@ void MgrStereoHand::mainLoop(){
 		// handFound[0] = false;
 		// handFound[1] = false;
 		bool changeStart = false;
-		#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
+		//#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(int i = 0; i < 2; ++i){
 			skinDetection[i]->detectSkin(frameRectified[i], frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 		
@@ -368,11 +370,14 @@ void MgrStereoHand::mainLoop(){
 			
 			if(!handFound[i]){
 				bool start = srModule->isSign(frameBlob[i], hand[i]->lastRect);
+				if(!start && Settings::instance()->changeTrajectory){
+					Settings::instance()->changeTrajectory = false;
+					start = true;
+				}
 				changeStart = (start != lastStart[i]);
 				lastStart[i] = start;
 			}
 			else{
-				
 			}
 		
 		}
@@ -386,7 +391,7 @@ void MgrStereoHand::mainLoop(){
 
 		// ONE
 		
-		if(handFound[0] && handFound[1] && (startRecognized[0] == 2)){
+		if(!handFound[0] && !handFound[1] && (startRecognized[0] == 2)){
 
 			displayOverlay(leftCamWindow->name, "START RECOGNIZED", 1000);
 
@@ -453,6 +458,9 @@ void MgrStereoHand::mainLoop(){
 		time(&endTime);
 		makeEverythingStop();
 		return;
+	}
+	}catch(cv::Exception ex){
+		
 	}
 }
 
@@ -581,6 +589,7 @@ bool MgrStereoHand::reinitAll(){
 
 	startRecognized[0] = startRecognized[1] = 0;
 	lastStart[0] = lastStart[1] = false;
+	Settings::instance()->changeTrajectory = false;
 
 	reinitFrames();
 
@@ -816,9 +825,6 @@ void MgrStereoHand::initUI(){
 	connect(ui.buttonStop,		SIGNAL(clicked()),
 			this,				SLOT(stopProcess()));
 
-	connect(ui.startStopTrajectoryButton,	SIGNAL(clicked()),
-			this,				SLOT(startStopTrajectoryClicked()));
-
 	// pokazywane elementy przetwarzania
 	connect(ui.sliderShowImage,	SIGNAL(valueChanged(int)),
 			this,				SLOT(changeShowImage(int)));
@@ -872,6 +878,8 @@ QString MgrStereoHand::loadFilm(int id){
 			ui.labelFilm1->setText(lastLoadDir.relativeFilePath(lastLoadDir.dirName()));
 			fileFilm1 = file;
 		}
+
+		ui.processButtonRadio0->click();
 	}
 	return file;
 }
@@ -962,12 +970,13 @@ void MgrStereoHand::startProcess(){
 void MgrStereoHand::stopProcess(){
 	nothing = true;
 }
-
+/*
 void MgrStereoHand::startStopTrajectoryClicked(){
 	if(!nothing){
 		startRecognized[0]=(startRecognized[0] == 2 ? 3 : 2);
 	}
 }
+*/
 
 // zakladam, ze timer zostal zatrzymany
 void MgrStereoHand::makeEverythingStop(){

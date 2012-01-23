@@ -106,6 +106,8 @@ public:
 	int light;
 	int bkg;
 
+	bool changeTrajectory;
+
 private:
 	Settings(void);
 	

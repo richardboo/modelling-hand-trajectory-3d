@@ -9,7 +9,7 @@ public:
 	Blob(void);
 	~Blob(void);
 
-	CvRect getBiggerRect();
+	CvRect getBiggerRect(int plus);
 	CvRect getSmallerRect();
 
 	void setLastRect(CvRect & rect);
@@ -20,6 +20,8 @@ public:
 
 	CvRect lastRect;
 	CvPoint lastPoint;
+
+	CvRect lastKnownRect;
 
 	CvPoint3D32f lastXYZ;
 	CvScalar color;

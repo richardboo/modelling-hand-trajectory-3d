@@ -58,6 +58,9 @@ void AlgorithmsDialog::initUI(){
 	connect(cudaDialog,	SIGNAL(accepted()),
 			this,				SLOT(cudaChanged()));
 
+	connect(ui.startStopTrajectoryButton,	SIGNAL(clicked()),
+		this,					SLOT(startStopTrajectoryClicked()));
+
 	
 	// algorytmy stereo dopasowania
 	stereoGroup = new QButtonGroup(this);
@@ -144,4 +147,8 @@ void AlgorithmsDialog::sgbmChanged(){
 
 void AlgorithmsDialog::cudaChanged(){
 
+}
+
+void AlgorithmsDialog::startStopTrajectoryClicked(){
+	Settings::instance()->changeTrajectory = true;
 }

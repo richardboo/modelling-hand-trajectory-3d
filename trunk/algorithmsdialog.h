@@ -44,6 +44,8 @@ private slots:
 	void showSGBMParamsClicked();
 	void showCUDAParamsClicked();
 
+	void startStopTrajectoryClicked();
+
 	void segmButtonClicked(int id);
 	void stereoButtonClicked(int id);
 
