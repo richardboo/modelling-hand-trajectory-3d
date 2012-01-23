@@ -118,6 +118,7 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 	hands[0]->setLastPointWithZ(avg.val[0]);
 	hands[1]->setLastPointWithZ(avg.val[0]);
 	
+
     return RESULT_OK;
 }
 

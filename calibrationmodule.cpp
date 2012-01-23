@@ -2,6 +2,11 @@
 #include "settings.h"
 #include "imageutils.hpp"
 
+//prapares point with (x,y,d) coordinates 
+typedef struct elem3_ { 
+	float f1; float f2; float f3; 
+} elem3; 
+
 CalibrationModule::CalibrationModule(void){
 	this->imageSize = Settings::instance()->defSize;
     mx[0] = mx[1] = my[0] = my[1] = 0;
@@ -216,6 +221,18 @@ int CalibrationModule::calibrationEnd(){
 
     cvInitUndistortRectifyMap(&_M1,&_D1,&_R1,&_M1,mx[0],my[0]);
     cvInitUndistortRectifyMap(&_M2,&_D2,&_R2,&_M2,mx[1],my[1]);
+
+	//gets parameters for reprojection matrix Q 
+	float Fx_= cvmGet( &_M1, 0, 0 ); // focal length in x direction of the rectified image in pixels 
+	float Fy_= cvmGet( &_M2, 1, 1 ); // focal length in y direction of the rectified image in pixels 
+	float Tx_= cvmGet( &_T, 0, 0 ); // Translation in x direction from the left camera to the right camera 
+	float Clx_= cvmGet( &_M1, 0, 2 ); // x coordinate of the optical center of the left camera 
+	float Crx_= cvmGet( &_M2, 0, 2 ); // x coordinate of the optical center of the right camera 
+	float Cy_= cvmGet( &_M1, 1, 2 ); // y coordinate of the optical center of both left and right cameras 
+	
+	float Qq[]= { 1, 0, 0, -Clx_, 0, 1, 0, -Cy_, 0, 0, 0, (Fx_+Fy_)/2, 0, 0, -1/Tx_, (Crx_-Clx_)/Tx_ }; 
+	mQ = cvMat( 4, 4, CV_32F, Qq );
+
 /*
 GPU
 	m_mx1 = mx1;
@@ -247,6 +264,10 @@ int CalibrationModule::calibrationSave(const char* filename){
     if(!fwrite(my[0]->data.fl,sizeof(float),my[0]->rows*my[0]->cols,f)) return RESULT_FAIL;
     if(!fwrite(mx[1]->data.fl,sizeof(float),mx[1]->rows*mx[1]->cols,f)) return RESULT_FAIL;
     if(!fwrite(my[1]->data.fl,sizeof(float),my[1]->rows*my[1]->cols,f)) return RESULT_FAIL;
+
+	// zapisanie Q
+	// if(!fwrite(mQ.data.fl,sizeof(float),mQ.rows*mQ.cols,f)) return RESULT_FAIL;
+
     fclose(f);
     return RESULT_OK;
 }
@@ -268,6 +289,10 @@ int CalibrationModule::calibrationLoad(const char* filename){
     if(!fread(my[0]->data.fl,sizeof(float),my[0]->rows*my[0]->cols,f)) return RESULT_FAIL;
     if(!fread(mx[1]->data.fl,sizeof(float),mx[1]->rows*mx[1]->cols,f)) return RESULT_FAIL;
     if(!fread(my[1]->data.fl,sizeof(float),my[1]->rows*my[1]->cols,f)) return RESULT_FAIL;
+
+	// odczytanie q
+	// if(!fread(mQ.data.fl,sizeof(float),mQ.rows*mQ.cols,f)) return RESULT_FAIL;
+
     fclose(f);
 /*
 GPU
@@ -283,4 +308,15 @@ GPU
 */
     calibrationDone = true;
     return RESULT_OK;
+}
+
+void CalibrationModule::setRealCoordinates(Blob * hands[2]){
+	
+	elem3 data3[3] = { 1.0f }; 
+	CvMat _3point = cvMat(1, 1, CV_32FC3, data3 ); 
+	CV_MAT_ELEM(_3point,elem3, 0, 0).f1 = hands[0]->lastPoint.x; 
+	CV_MAT_ELEM(_3point,elem3, 0, 0).f2 = hands[0]->lastPoint.y; 
+	CV_MAT_ELEM(_3point,elem3, 0, 0).f3 = hands[0]->lastDisp;
+
+	cvPerspectiveTransform(&_3point, &_3point, &mQ);
 }

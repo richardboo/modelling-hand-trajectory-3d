@@ -19,6 +19,7 @@ public:
 	std::deque<CvPoint3D32f> allXYZ;
 
 	CvRect lastRect;
+	int lastDisp;
 	CvPoint lastPoint;
 
 	CvRect lastKnownRect;
