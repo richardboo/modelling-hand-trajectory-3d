@@ -331,21 +331,17 @@ void MgrStereoHand::mainLoop(){
 			//cvShowImage("diff", frameDiff[0]);
 		}
 
-		int handFound[2];
-		handFound[0] = 3;
-		handFound[1] = 3;
-		// dawne
-		// bool handFound[2];
-		// handFound[0] = false;
-		// handFound[1] = false;
+		int handNotFound[2];
+		handNotFound[0] = 3;
+		handNotFound[1] = 3;
 		bool changeStart = false;
 		//#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(int i = 0; i < 2; ++i){
 			skinDetection[i]->detectSkin(frameRectified[i], frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 		
 			// dawne
-			//handFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
-			//if(handFound[i]){
+			//handNotFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
+			//if(handNotFound[i]){
 		/*
 			cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 			cvZero(frameGray[1]);
@@ -366,32 +362,50 @@ void MgrStereoHand::mainLoop(){
 			*/
 			//cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 
-			handFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
+			handNotFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
 			
-			if(!handFound[i]){
+			if(!handNotFound[i]){
 				bool start = srModule->isSign(frameBlob[i], hand[i]->lastRect);
+				
+				qDebug() << "start: " << start;
+
+				if(start && startRecognized[i] != 1){
+					startRecognized[i]++;
+				}
+				else if(!start && startRecognized[i] == 1){
+					// raz nie rozpoznano, wiec mozna przejsc do stanu ROZPOZNAWANIE
+					startRecognized[i]++;
+				}
+				
+/*
 				if(!start && Settings::instance()->changeTrajectory){
 					Settings::instance()->changeTrajectory = false;
-					start = true;
+					lastStart[i] = true;
+					lastStart[(i+1)%2]=true;
+					changeStart = true;
 				}
-				changeStart = (start != lastStart[i]);
-				lastStart[i] = start;
+				else{
+					changeStart = (start != lastStart[i]);
+					lastStart[i] = start;
+				}
+*/
 			}
-			else{
-			}
-		
 		}
 
-		if(changeStart && lastStart[0] == lastStart[1]){
-			startRecognized[0] = (startRecognized[0]+1);
+		// stan obydwu to minimum z nich
+		int minRec = min(startRecognized[0], startRecognized[1]);
+		startRecognized[0] = startRecognized[1] = minRec;
+
+		if(Settings::instance()->changeTrajectory){
+			startRecognized[0] = (startRecognized[0] == 0 ? 2 : startRecognized[0]+1);
+			startRecognized[1] = startRecognized[0];
+			Settings::instance()->changeTrajectory = false;
 		}
 
-
-		qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
+		//qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
 
 		// ONE
-		
-		if(!handFound[0] && !handFound[1] && (startRecognized[0] == 2)){
+		if(!handNotFound[0] && !handNotFound[1] && (startRecognized[0] == 2)){
 
 			displayOverlay(leftCamWindow->name, "START RECOGNIZED", 1000);
 
@@ -409,6 +423,10 @@ void MgrStereoHand::mainLoop(){
 
 			cvZero(disparityToShow);
 			disparityWindow->showImage(disparityToShow);
+
+			if(startRecognized[0] >= 3){
+				displayOverlay(leftCamWindow->name, "STOP RECOGNIZED", 1000);
+			}
 		}
 
 		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
@@ -1306,7 +1324,7 @@ float MgrStereoHand::getGameTime(){
 			
 			// tutaj - juz spokojnie tracking dloni i cale przetwarzanie
 			// dlatego ma nawet osobna petle
-			bool handFound = true;
+			bool handNotFound = true;
 			for(int i = 0; i < 2; ++i){
 				
 				IplImage * frameToUse = frameRectified[i];
@@ -1331,12 +1349,12 @@ float MgrStereoHand::getGameTime(){
 				skinDetection[i]->detectSkin(frameToUse, frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 
 				// i wykrywanie dloni
-				handFound = handFound && handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
+				handNotFound = handNotFound && handDetection[i]->findHand(frameSkin[i], frameBlob[i], rect, *hand[i]);
 			}
 
 			// a tutaj juz skladamy obraz stereo, jesli sa znalezione dlonie
-			handFound = false;
-			if(handFound){
+			handNotFound = false;
+			if(handNotFound){
 				if(stereoAlg < MINE_)
 					stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
 				else

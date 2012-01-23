@@ -96,6 +96,11 @@ private:
 	CalibrationModule * calibModule;
 	SignRecognitionModule * srModule;
 
+	// stan rozpoznania pobierania trajektorii dla kazdego z obrazow
+	// rozpoczecie, kiedy startRecognized[0/1] == 1
+	// jesli jedna klatke nie rozpozna - przechodzi na 2
+	// zakonczenie, kiedy startRecognized[0/1] == 3
+	// po kazdej petli obydwa == min z nich
 	int startRecognized[2];
 	bool lastStart[2];
 
