@@ -16,7 +16,12 @@ public:
 	int findHand(IplImage * skin, IplImage * blobImg,  IplImage * original, CvRect & rect, Blob & hand, Blob & head);
 
 private:
-	CvConnectedComp component, found;
+	CvConnectedComp possibleHand, possibleHead, component;
+	CvPoint pointHand, pointHead;
+
+	std::vector<CvConnectedComp> blobsFound;
+	std::vector<CvPoint> blobsFoundPoints;
+
 	CvScalar none;
 	CvMemStorage * storage;
 	CvMoments moments;
