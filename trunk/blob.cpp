@@ -13,6 +13,7 @@ Blob::Blob(void): id(idCounter){
 	lastXYZ = cvPoint3D32f(-1, -1, -1);
 	
 	lastPoint = cvPoint(-1,-1);
+	lastDisp = -1;
 
 	lastKnownRect = cvRect(-1,-1,-1,-1);
 
@@ -76,8 +77,10 @@ void Blob::setLastPointWithZ(int z){
 
 	if(z == -1){
 		lastXYZ = cvPoint3D32f(-1, -1, -1);
+		lastDisp = -1;
 	}else{
 		lastXYZ = cvPoint3D32f(lastPoint.x, lastPoint.y, z);
+		lastDisp = z;
 		qDebug() << "point: " << lastPoint.x << lastPoint.y << z;
 	}
 	allXYZ.push_front(lastXYZ);

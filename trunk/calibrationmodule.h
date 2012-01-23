@@ -38,6 +38,7 @@ public:
     //CvMat *mx1,*my1,*mx2,*my2;
 
 	CvMat *mx[2],*my[2];
+	CvMat mQ;
 
 	IplImage * imageWithCorners;
 	vector<IplImage *> leftImages;
@@ -53,6 +54,7 @@ public:
     int calibrationLoad(const char* filename);
 
 	void rectifyImage(IplImage * frame, IplImage * imagesRectified, int i);
+	void setRealCoordinates(Blob * hands[2]);
 
     CvSize getImageSize()		{return imageSize;}
     bool getCalibrationStarted(){return calibrationStarted;}
