@@ -2,6 +2,7 @@
 #include "settings.h"
 
 #include <QString>
+#include <QDateTime>
 
 StatisticsDialog::StatisticsDialog(QWidget *parent)
 	: QDialog(parent)
@@ -41,4 +42,16 @@ void StatisticsDialog::showStatistics(){
 
 void StatisticsDialog::showNone(){
 	ui.statLabel->setText("(brak statystyk)");
+}
+
+QString StatisticsDialog::getStats(){
+	return ui.statLabel->text();
+}
+
+QString StatisticsDialog::getFileName(){
+
+	QDateTime dateTime = QDateTime::currentDateTime();
+	QString dateTimeString = dateTime.toString();
+	return QString()+"s"+Settings::instance()->segmantationAlg+"_a"+Settings::instance()->stereoAlg+"_"+dateTimeString;
+
 }

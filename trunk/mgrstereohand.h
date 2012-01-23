@@ -144,7 +144,8 @@ private:
 	void showImages();
 
 	// zachowanie trajektorii
-	QString saveTrajectory();
+	QString saveTrajectory(QString file);
+	void saveStatistics(QString file);
 
 	// nagrywanie filmow
 	void recordFilms();
