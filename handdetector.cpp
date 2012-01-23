@@ -218,9 +218,6 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 		//qDebug() << i << j;
 	}
 
-	//qDebug() << "possible hand" << possibleHand.rect.x;
-	//qDebug() << "possible face" << possibleHead.rect.x;
-
 	// mamy dlon!
 	if(possibleHand.rect.x != -1){
 		hand.lastRect = possibleHand.rect;

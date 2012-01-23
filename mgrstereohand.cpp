@@ -1142,13 +1142,15 @@ void MgrStereoHand::recordFilms(){
 			cvReleaseVideoWriter(&videoWriter0);
 			cvReleaseVideoWriter(&videoWriter1);
 
-			statisticsDialog->trajectory = saveTrajectory();
-
 			saved = true;
 		}
 	}
 	
+	QString file = statisticsDialog->getFileName();
+	statisticsDialog->trajectory = saveTrajectory(file);
 	statisticsDialog->showStatistics();
+	saveStatistics(file);
+
 
 	displayOverlay(leftCamWindow->name, saved ? "Zapisano filmy" : "Operacja anulowana", 2000);
 	displayOverlay(rightCamWindow->name, saved ? "Zapisano filmy" : "Operacja anulowana", 2000);
@@ -1178,9 +1180,11 @@ void MgrStereoHand::storeStatistics(){
 	statisticsDialog->file1 = fileFilm0;
 	statisticsDialog->file2 = fileFilm1;
 	statisticsDialog->calibration = fileCalib;
-	statisticsDialog->trajectory = saveTrajectory();
 
+	QString file = statisticsDialog->getFileName();
+	statisticsDialog->trajectory = saveTrajectory(file);
 	statisticsDialog->showStatistics();
+	saveStatistics(file);
 
 	displayOverlay(leftCamWindow->name, "Zapisano" , 1000);
 	displayOverlay(rightCamWindow->name, "Zapisano", 1000);
@@ -1190,14 +1194,14 @@ void MgrStereoHand::storeStatistics(){
 }
 
 
-QString MgrStereoHand::saveTrajectory(){
+QString MgrStereoHand::saveTrajectory(QString file){
 	
-	QString file = QFileDialog::getSaveFileName(NULL, tr("Zapisz trajektorie"), lastLoadDir.absolutePath(), tr("Plik trajektorii (*.trj)"));
-	if(file == NULL){
-		file = "trajektoria.trj";
-	}
+	//QString file = QFileDialog::getSaveFileName(NULL, tr("Zapisz trajektorie"), lastLoadDir.absolutePath(), tr("Plik trajektorii (*.trj)"));
+	//if(file == NULL){
+	//	file = "trajektoria.trj";
+	//}
 	
-	QFile fileTrj(file);
+	QFile fileTrj("traj_"+file+".trj");
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
 
@@ -1252,8 +1256,20 @@ QString MgrStereoHand::saveTrajectory(){
 		return file;
 	}
 	return "";
-
 }
+
+
+void MgrStereoHand::saveStatistics(QString file){
+	QFile fileTrj("stat_"+file+".txt");
+
+	if (fileTrj.open(QIODevice::WriteOnly)){
+
+		QTextStream in(&fileTrj);
+		in << statisticsDialog->getStats();
+		fileTrj.close();
+	}
+}
+
 
 
 void MgrStereoHand::updateFPS(){

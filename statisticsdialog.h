@@ -15,6 +15,8 @@ public:
 
 	void showStatistics();
 	void showNone();
+	QString getStats();
+	QString getFileName();
 
 	int fps;
 	int bps;
