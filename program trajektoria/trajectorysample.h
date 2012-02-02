@@ -23,7 +23,8 @@ public:
 	SingleTrajectory kalman3Trajectory;
 
 	bool isReady;
-	int realIndex;
+	float realIndex;
+	float minZ, maxZ;
 	
 	std::string fileName;
 
@@ -39,6 +40,7 @@ public:
 
 private:
 	void findMinMax(SingleTrajectory & traj);
+	void findMinMaxZ();
 	void recognizeSingleTraj(SingleTrajectory & traj);
 	void showStatsForTrajectory(SingleTrajectory & traj);
 	void smoothTrajectoryKalman(std::vector<Point3D> & original, std::vector<Point3D> & smoothed);

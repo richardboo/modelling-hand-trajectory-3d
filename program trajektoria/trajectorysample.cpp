@@ -1,6 +1,10 @@
 #include "trajectorysample.h"
 #include <opencv2/video/tracking.hpp>
 #include <iostream>
+#include <list>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 using namespace cv;
@@ -40,7 +44,9 @@ void TrajectorySample::loadSample(ifstream & file){
 // - trajektoria filtrowana kalmanem 3x
 // obliczane minima i maksima trajektorii
 void TrajectorySample::prepareAllTrajectories(){
-
+	if(originalPoints.size() < 2)
+		return;
+	findMinMaxZ();
 	filterSample();
 	smoothTrajectory();
 	smoothTrajectoryTwice();
@@ -55,10 +61,125 @@ void TrajectorySample::recognize(){
 	recognizeSingleTraj(kalman3Trajectory);
 }
 
+void TrajectorySample::findMinMaxZ(){
+	minZ = originalPoints[0].z;
+	maxZ = originalPoints[0].z;
+	for(unsigned int i = 0; i < originalPoints.size(); ++i){
+		if(originalPoints[i].z < minZ)
+			minZ = originalPoints[i].z;
+		else if(originalPoints[i].z > maxZ)
+			maxZ = originalPoints[i].z;
+	}
+}
 
 void TrajectorySample::filterSample(){
 
-	for(unsigned int i = 0; i < originalPoints.size(); ++i){
+	// wykonanie 200 probek
+
+	// najpierw populacja probek przez interpolacje
+	// tak, aby odleglosc z pomiedzy nimi byla co najwyzej diffZ
+
+	float diffZ = (maxZ-minZ)/200.0f;
+
+	vector<Point3D> vectTemp;
+	for(unsigned int i = 0; i < originalPoints.size()-1; ++i){
+		Point3D point1 = originalPoints[i];
+		Point3D point2 = originalPoints[i+1];
+
+		if(abs(point1.z - point2.z) <= diffZ){
+			vectTemp.push_back(point1);
+			continue;
+		}
+
+		vectTemp.push_back(point1);
+		float div = abs(point2.z - point1.z)/diffZ;
+		float difX = (point2.x - point1.x)/div;
+		float difY = (point2.y - point1.y)/div;
+		float difZ = (point2.z - point1.z)/div;
+
+		for(int k = 1; k <= (int)div; ++k){
+			vectTemp.push_back(Point3D(point1.x+k*difX, point1.y+k*difY, point1.z+k*difZ));
+		}
+	}
+	// i dodanie ostatniego
+	vectTemp.push_back(originalPoints[originalPoints.size()-1]);
+	
+	// mamy punkty w odleglosci co najwyzej zdiff
+	// ale moze byc ich wiecej niz 200
+	if(vectTemp.size() < 200){
+		cout << "NIEEEEE" << endl;
+		return;
+	}
+
+	cout << "przed usuwaniem co drugi: " << vectTemp.size() << endl;
+
+	list<Point3D> temp2;
+	// usuwamy te, ktore sa za czesto
+	for(unsigned int i = 0; i < vectTemp.size()-2; i+=2){
+	
+		temp2.push_back(vectTemp[i]);
+		if(abs(vectTemp[i].z - vectTemp[i+2].z) > diffZ){
+			// usuwamy ten posrodku, jesli jest <= zdiff
+			temp2.push_back(vectTemp[i+1]);
+		}
+	}
+	temp2.push_back(vectTemp[vectTemp.size()-1]);
+
+	cout << "po usuwaniu co drugi: " << temp2.size() << endl;
+
+	int tooMuch = temp2.size()-200;
+	list<Point3D>::iterator iter;
+	while(tooMuch >= 200){
+		
+		int counter = 0;
+		for (iter = temp2.begin(); iter != temp2.end(); ++iter) {
+			if(counter%2 == 1 && counter != 0 && counter != temp2.size()-1){
+				iter = temp2.erase(iter);
+				--iter;
+			}
+			counter++;
+		}
+
+		tooMuch = temp2.size()-200;
+	}
+
+	if(tooMuch > 0){
+		
+		// mamy tooMuch nadal, ale juz mniej niz 100
+		// no to teraz usuwamy po prostu co ktorys
+		// co ktory?
+		int thisOne = 0;
+		float mod = 200.0f/tooMuch;
+		if(mod >= 1.5f)
+			thisOne = (int)mod+1;
+		else
+			thisOne = (int)mod;
+
+		int counter = 0;
+		for (iter = temp2.begin(); iter != temp2.end() && temp2.size() > 200; ++iter) {
+			if(counter != 0 && counter != temp2.size()-1 && counter == thisOne){
+				iter = temp2.erase(iter);
+				--iter;
+			}
+			counter = (counter+1)%(thisOne+1);
+		}
+
+		while(temp2.size() > 200){
+			srand(time(NULL));
+			int nr = (rand() % (temp2.size()-1)) + 1; // nie pierwszy i nie ostatni
+			iter = temp2.begin();
+			advance(iter, nr);
+			temp2.erase(iter);
+		}
+	}
+
+	for (iter = temp2.begin(); iter != temp2.end(); ++iter) {
+		filteredTrajectory.points.push_back(*iter);
+	}
+
+
+
+	/*for(unsigned int i = 0; i < originalPoints.size(); ++i){
 		if(filteredTrajectory.points.size() >= 1){
 			Point3D lastOne = filteredTrajectory.points.at(filteredTrajectory.points.size()-1);
 
@@ -69,7 +190,7 @@ void TrajectorySample::filterSample(){
 			}
 		}
 		filteredTrajectory.points.push_back(originalPoints.at(i));
-	}
+	}*/
 
 }
 
@@ -151,6 +272,16 @@ void TrajectorySample::setRealIndex(int index){
 
 
 void TrajectorySample::findMinMax(SingleTrajectory & traj){
+	if(traj.points.size() < 1)
+		return;
+
+	traj.minX = traj.points[0];
+	traj.minY = traj.points[0];
+	traj.minZ = traj.points[0];
+	traj.maxX = traj.points[0];
+	traj.maxY = traj.points[0];
+	traj.maxZ = traj.points[0];
+
 	for(unsigned int i = 0; i < traj.points.size(); ++i){
 
 		Point3D & curr = traj.points[i];
@@ -184,7 +315,7 @@ void TrajectorySample::recognizeSingleTraj(SingleTrajectory & traj){
 	for(unsigned int m = 0; m < traj.fittedModels.size(); ++m){
 		
 		ModelTrajectory * curr = traj.fittedModels[m];
-		traj.diffFittedModels[m] = 0;
+		traj.diffFittedModels.push_back(0.0f);
 
 		// punktow powinno byc tyle samo
 		for(unsigned int i = 0; i < traj.points.size(); ++i){

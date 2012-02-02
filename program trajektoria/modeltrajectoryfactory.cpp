@@ -57,74 +57,74 @@ void ModelTrajectoryFactory::fitModelTrajectories(TrajectorySample * sample){
 	}
 	
 	// kalman
-	single = sample->kalmanTrajectory;
-	single.fittedModels.clear();
+	SingleTrajectory & single2 = sample->kalmanTrajectory;
+	single2.fittedModels.clear();
 	
 	for(unsigned int i = 0; i < 5; ++i){
-		ModelTrajectory * thewNewOne = generateTrajectory(i, single.maxZ, single.minZ, single.maxY, single.minY, single.maxX, single.minX);
-		single.fittedModels.push_back(thewNewOne);
+		ModelTrajectory * thewNewOne = generateTrajectory(i, single2.maxZ, single2.minZ, single2.maxY, single2.minY, single2.maxX, single2.minX, single2.points.size());
+		single2.fittedModels.push_back(thewNewOne);
 	}
 
 	// kalman 3
-	single = sample->kalman3Trajectory;
-	single.fittedModels.clear();
+	SingleTrajectory & single3 = sample->kalman3Trajectory;
+	single3.fittedModels.clear();
 	
 	for(unsigned int i = 0; i < 5; ++i){
-		ModelTrajectory * thewNewOne = generateTrajectory(i, single.maxZ, single.minZ, single.maxY, single.minY, single.maxX, single.minX);
-		single.fittedModels.push_back(thewNewOne);
+		ModelTrajectory * thewNewOne = generateTrajectory(i, single3.maxZ, single3.minZ, single3.maxY, single3.minY, single3.maxX, single3.minX, single3.points.size());
+		single3.fittedModels.push_back(thewNewOne);
 	}
 
 }
 
 
-ModelTrajectory * ModelTrajectoryFactory::generateTrajectory(int index,
-	Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+ModelTrajectory * ModelTrajectoryFactory::generateTrajectory(int index, 
+	Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 	
 	ModelTrajectory * model = new ModelTrajectory;
 	model->index = index;
 
 	switch(index){
 		case 0:
-		createLine(model->points, maxZ, minZ, maxY, minY, maxX, minX);
+		createLine(model->points, maxZ, minZ, maxY, minY, maxX, minX, count);
 		break;
 
 		case 1:
-		createSpiral(model->points, maxZ, minZ, maxY, minY, maxX, minX);
+		createSpiral(model->points, maxZ, minZ, maxY, minY, maxX, minX, count);
 		break;
 
 		case 2:
-		createCircle(model->points, maxZ, minZ, maxY, minY, maxX, minX);
+		createCircle(model->points, maxZ, minZ, maxY, minY, maxX, minX, count);
 		break;
 
 		case 3:
-		createZigZag(model->points, maxZ, minZ, maxY, minY, maxX, minX);
+		createZigZag(model->points, maxZ, minZ, maxY, minY, maxX, minX, count);
 		break;
 
 		case 4:
-		createArc(model->points, maxZ, minZ, maxY, minY, maxX, minX);
+		createArc(model->points, maxZ, minZ, maxY, minY, maxX, minX, count);
 		break;
 	}
 																 
 	return model;
 }
 
-void ModelTrajectoryFactory::createLine(vector<Point3D> & vect,	Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+void ModelTrajectoryFactory::createLine(vector<Point3D> & vect,	Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 
 	float x, y, zdiff, currZ;
 
-	zdiff = (maxZ.z-minZ.z)/200.f;
+	zdiff = (maxZ.z-minZ.z)/(float)count;
 	x = (maxX.x-minX.x)/2.0f + minX.x;
 	y = (maxY.y-minY.y)/2.0f + minY.y;
 
 	currZ = minZ.z;
-	for(int i = 0; i < 200; ++i){
+	for(int i = 0; i < count; ++i){
 		vect.push_back(Point3D(x,y,currZ));
 		currZ+=zdiff;
 	}
 
 }
 
-void ModelTrajectoryFactory::createCircle(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+void ModelTrajectoryFactory::createCircle(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 	
 	float z = (maxZ.z-minZ.z)/2.0f+minZ.z;
 	float x, y;
@@ -132,34 +132,34 @@ void ModelTrajectoryFactory::createCircle(vector<Point3D> & vect,Point3D & maxZ,
 	y = (maxY.y-minY.y)/2.0f + minY.y;
 	
 	float angle = 0;
-	float angleDiff = 360.0f/200.0f;
+	float angleDiff = 360.0f/(float)count;
 	float rad = 0;
 	float divider = 3.14159265f/180.f;
 	float radius = ((maxX.x-minX.x)/2.0f + (maxY.y-minY.y)/2.0f)/2.0f;
 
-	for(int i = 0; i < 200; ++i){
+	for(int i = 0; i < count; ++i){
 		rad = angle*divider;
 		vect.push_back(Point3D(sin(rad)*radius+x, cos(rad)*radius+y, z));
 		angle += angleDiff;
 	}
 }
 
-void ModelTrajectoryFactory::createSpiral(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+void ModelTrajectoryFactory::createSpiral(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 
 	float x, y;
 	x = (maxX.x-minX.x)/2.0f + minX.x;
 	y = (maxY.y-minY.y)/2.0f + minY.y;
 	
 	float angle = 0;
-	float angleDiff = 540.0f/200.0f;
+	float angleDiff = 540.0f/(float)count;
 	float rad = 0;
 	float divider = 3.14159265f/180.f;
 	float radius = ((maxX.x-minX.x)/2.0f + (maxY.y-minY.y)/2.0f)/2.0f;
 
 	float currZ = minZ.z;
-	float diffZ = (maxZ.z - minZ.z)/200.0f;
+	float diffZ = (maxZ.z - minZ.z)/(float)count;
 
-	for(int i = 0; i < 200; ++i){
+	for(int i = 0; i < count; ++i){
 		rad = angle*divider;
 		vect.push_back(Point3D(sin(rad)*radius+x, cos(rad)*radius+y, currZ));
 		angle += angleDiff;
@@ -168,7 +168,7 @@ void ModelTrajectoryFactory::createSpiral(vector<Point3D> & vect,Point3D & maxZ,
 
 }
 
-void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 
 	// z half - gdzie jest przelamanie
 	// poznawane po maksymalnym wychyleniu x
@@ -177,11 +177,11 @@ void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ,
 	// sredni y z wychylenia
 	float y = (maxY.y-minY.y)/2.0f + minY.y;
 
-	float zdiff = (maxZ.z-minZ.z)/200.f;
+	float zdiff = (maxZ.z-minZ.z)/(float)count;
 	float currZ = minZ.z;
 
 
-	float divide = ((zHalf-minZ.z)/(maxZ.z-minZ.z)) * 200;
+	float divide = ((zHalf-minZ.z)/(maxZ.z-minZ.z)) * count;
 	if(divide == 0)	divide = 1.0f;
 
 	float diffX = (maxX.x-minX.x)/divide;
@@ -194,13 +194,13 @@ void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ,
 		currZ+=zdiff;
 	}
 
-	divide = 200.0f-divide;
+	divide = (float)count-divide;
 	if(divide == 0)	divide = 1.0f;
 	diffX = (maxX.x-minX.x)/divide;
 	currX = maxX.x;
 
 	// x maleje
-	for(int i = (int)divide; i < 200; ++i){
+	for(int i = (int)divide; i < count; ++i){
 		vect.push_back(Point3D(currX, y, currZ));
 		currX-=diffX;
 		currZ+=zdiff;
@@ -208,19 +208,19 @@ void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ,
 
 }
 
-void ModelTrajectoryFactory::createArc(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX){
+void ModelTrajectoryFactory::createArc(vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX, int count){
 
 	float z = (maxZ.z-minZ.z)/2.0f + minZ.z;
 	float y = (maxY.y-minY.y)/2.0f + minY.y;
 
 	float x = (maxX.x-minX.x)/2.0f + minX.x;
 	float angle = 270.0f;
-	float angleDiff = (450.0f-270.0f)/200.0f;
+	float angleDiff = (450.0f-270.0f)/(float)count;
 	float rad = 0;
 	float divider = 3.14159265f/180.f;
 	float radius = ((maxZ.z-minZ.z)/2.0f + (maxY.y-minY.y)/2.0f)/2.0f;
 
-	for(int i = 0; i < 200; ++i){
+	for(int i = 0; i < count; ++i){
 		rad = angle*divider;
 		vect.push_back(Point3D(x, cos(rad)*radius+y, sin(rad)*radius+z));
 		angle += angleDiff;

@@ -109,6 +109,11 @@ bool loadFile(){
 		currentSampleIndex = samples.size()-1;
 
 		newSample->prepareAllTrajectories();
+
+		cout << endl << "Podaj prawdziwy indeks trajektorii:"<< endl;
+		cout << "LINE: 0\tSPIRAL:1\tCIRCLE:2\tZIGZAG:3\tARC:4"<<endl;
+		cin >> newSample->realIndex;
+
 		trajFactory.fitModelTrajectories(newSample);
 		newSample->recognize();
 		newSample->showStats();
@@ -156,7 +161,7 @@ void renderPrimitive () {
 		drawTrajectoryWithColor(1.0f, 0.0f, 0.0f, trajFactory.originalTrajectories[modelTrajektoryNr]->points);
 	}
 	else if(viewState == TRAJECTORIES){
-		if(currentSampleIndex > -1 && (int)samples.size() < currentSampleIndex){
+		if(currentSampleIndex > -1 ){
 			TrajectorySample * sample = samples[currentSampleIndex];
 			if(!sample->isReady){
 				return;
@@ -180,7 +185,7 @@ void renderPrimitive () {
 	}
 	else if(viewState == FITTED){
 		//testedTrajectory+modelTrajectoryNr
-		if(currentSampleIndex > -1 && (int)samples.size() < currentSampleIndex){
+		if(currentSampleIndex > -1 ){
 			TrajectorySample * sample = samples[currentSampleIndex];
 			if(!sample->isReady){
 				return;
