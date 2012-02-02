@@ -14,12 +14,19 @@ public:
 
 	void generateOriginalTrajectories(int width, int height, int maxZ);
 
-	ModelTrajectory * generateTrajectory(int index, int width, int height, 
-		Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
+	
 
 	std::vector<ModelTrajectory *> originalTrajectories;
 	void fitModelTrajectories(TrajectorySample * sample);
 
 	int trNum;
+
+private:
+	void createLine(std::vector<Point3D> & vect, Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
+	void createCircle(std::vector<Point3D> & vect, Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
+	void createSpiral(std::vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
+	void createZigZag(std::vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
+	void createArc(std::vector<Point3D> & vect,Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
 	
+	ModelTrajectory * generateTrajectory(int index, Point3D & maxZ, Point3D & minZ, Point3D & maxY, Point3D & minY, Point3D & maxX, Point3D & minX);
 };
