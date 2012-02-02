@@ -14,7 +14,7 @@
 #include "modeltrajectoryfactory.h"
 #include "recognitionmodule.h"
 
-#define PI 3.14
+
 #define ORIGINAL 0
 #define TRAJECTORIES 1
 #define FITTED 2
@@ -171,10 +171,10 @@ void renderPrimitive () {
 				drawTrajectoryWithColor(0.0f, 0.0f, 1.0f, sample->kalmanTrajectory.points);
 			}
 			if(sampleToShow & 8){
-				drawTrajectoryWithColor(1.0f, 1.0f, 1.0f, sample->kalman3Trajectory.points);
+				drawTrajectoryWithColor(1.0f, 0.0f, 1.0f, sample->kalman3Trajectory.points);
 			}
 			if(sampleToShow & 16){
-				drawTrajectoryWithColor(0.0f, 1.0f, 1.0f, sample->kalmanTrajectory.fittedModels[sample->kalmanTrajectory.recognizedIndex]->points);
+				drawTrajectoryWithColor(0.0f, 1.0f, 0.0f, sample->kalmanTrajectory.fittedModels[sample->kalmanTrajectory.recognizedIndex]->points);
 			}
 		}
 	}
@@ -205,50 +205,69 @@ void renderPrimitive () {
 
 void renderStrings(){
 	// tryb wysiwetlania
-	glRasterPos2i(30, 610);
+	
 	glColor3f(1.0f, 1.0f, 1.0f);
+	glRasterPos2i(30, 610);
 	glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)(viewState == 0? "modelowe trajektorie": (viewState == 1 ? "badane trajektorie" : "dopasowane trajektorie")));
 
 	// ktora trajektoria modelowa?
 	int nextY = 590;
 	if(viewState == ORIGINAL || viewState == FITTED){
-		glRasterPos2i(30, nextY);
+		
 		glColor3f(0.8f, 0.2f, 0.2f);
+		glRasterPos2i(30, nextY);
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)"model: ");
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)ModelTrajectory::name[modelTrajektoryNr]);
 		nextY -= 20;
 	}
 	if(viewState == TRAJECTORIES){
-		glRasterPos2i(30, nextY);
 		glColor3f(0.8f, 0.2f, 0.2f);
+		glRasterPos2i(30, nextY);
+		
 		nextY -= 20;
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)"badane: ");
 		glRasterPos2i(30, nextY);
 		if(sampleToShow & 1){
+			
 			glColor3f(1.0f, 1.0f, 0.0f);
+			glRasterPos2i(30, nextY);
 			glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[0]);
+			nextY-=15;
 		}
 		if(sampleToShow & 2){
+			
 			glColor3f(0.0f, 1.0f, 1.0f);
+			glRasterPos2i(30, nextY);
 			glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[1]);
+			nextY-=15;
 		}
 		if(sampleToShow & 4){
 			glColor3f(0.0f, 0.0f, 1.0f);
+			glRasterPos2i(30, nextY);
+			
 			glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[2]);
+			nextY-=15;
 		}
 		if(sampleToShow & 8){
-			glColor3f(1.0f, 1.0f, 1.0f);
+			glColor3f(1.0f, 0.0f, 1.0f);
+			glRasterPos2i(30, nextY);
+			
 			glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[3]);
+			nextY-=15;
 		}
 		if(sampleToShow & 16){
-			glColor3f(0.0f, 1.0f, 1.0f);
+			glColor3f(0.0f, 1.0f, 0.0f);
+			glRasterPos2i(30, nextY);
+			
 			glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[4]);
+			nextY-=15;
 		}
 		nextY -=20;
 	}
 	if(viewState == FITTED){
-		glRasterPos2i(30, nextY);
 		glColor3f(0.2f, 0.8f, 0.2f);
+		glRasterPos2i(30, nextY);
+		
 		nextY -= 20;
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)"badana: ");
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[testedTrajectory]);
@@ -281,11 +300,9 @@ void keyOperations (void) {
 		scale -= 0.0001f;
 	}
 	else if(keyStates['l']){
-	
+		keyStates['l'] = false;
 		if(openFile())
 			loadFile();
-
-		keyStates['l'] = false;
 	}
 	else if(keyStates['q']){
 		exit(0);
