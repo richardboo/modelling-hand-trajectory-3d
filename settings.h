@@ -33,6 +33,9 @@
 #define FACE 1
 #define OK_FACE_HAND 0
 
+#define VIDEO 2
+#define CAMERA 0
+
 class Settings
 {
 
@@ -107,6 +110,12 @@ public:
 	int bkg;
 
 	bool changeTrajectory;
+
+	QString fileFilm0;
+	QString fileFilm1;
+	QString fileCalib;
+
+	int processType;
 
 private:
 	Settings(void);

@@ -10,6 +10,7 @@ Settings::Settings(void){
 	defSmallSize = cvSize(320, 240);
 
 	changeTrajectory = false;
+	processType = 0;
 }
 
 Settings::~Settings(void)
