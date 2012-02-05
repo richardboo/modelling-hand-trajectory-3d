@@ -3,6 +3,8 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QThread>
+#include <QByteArray>
+#include <QMessageBox>
 
 MgrStereoHand::MgrStereoHand(QWidget *parent, Qt::WFlags flags)	: QMainWindow(parent)
 {
@@ -18,6 +20,7 @@ MgrStereoHand::~MgrStereoHand(){
 	delete trajectoryWindow;
 	delete fs;
 	delete drawingModule;
+	delete calibModule;
 }
 
 bool MgrStereoHand::init(){
@@ -28,8 +31,13 @@ bool MgrStereoHand::init(){
 	fs = new FrameStorage;
 	fs->initFrames();
 
+	calibModule = new CalibrationModule;
+
 	process = new ProcessingThread;
-	process->init(fs);
+	process->init(fs, calibModule, calibDialog, statisticsDialog);
+
+	calibDialog->init(calibModule);
+
 	realProcessingThead = new QThread();
 	process->moveToThread(realProcessingThead);
 
@@ -39,7 +47,13 @@ bool MgrStereoHand::init(){
 	connect(realProcessingThead, SIGNAL(finished()), realProcessingThead, SLOT(deleteLater()));
 	
 	connect(realProcessingThead, SIGNAL(finished()), this, SLOT(realExit()));
+	
 	connect(process, SIGNAL(showImages()), this, SLOT(showImages()));
+	connect(process, SIGNAL(messageError(QString, QString)), this, SLOT(errorMessage(QString, QString)));
+	connect(process, SIGNAL(startedProcess()), this, SLOT(startedProcess()));
+	connect(process, SIGNAL(finishedProcess()), this, SLOT(finishedProcess()));
+	connect(process, SIGNAL(calibrationNotSet()), this, SLOT(calibrationNotSet()));
+	connect(process, SIGNAL(showOverlay(QString,time)), this, SLOT(showOverlay(QString,time)));
 	
 	realProcessingThead->start();
 
@@ -156,64 +170,64 @@ void MgrStereoHand::initWindows(){
 void MgrStereoHand::showImages(){
 
 	switch(Settings::instance()->imageType){
+
 		case 0:
+
+			cvResize(fs->frameShow[0], fs->frameSmaller[0]);//, CV_INTER_NN);
+			cvResize(fs->frameShow[1], fs->frameSmaller[1]);//, CV_INTER_NN);
+			drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
 			leftCamWindow->showImage(fs->frameSmaller[0]);
 			rightCamWindow->showImage(fs->frameSmaller[1]);
-		break;
-		/*
-		case 0:
-
-			cvResize(frameShow[0], frameSmaller[0]);//, CV_INTER_NN);
-			cvResize(frameShow[1], frameSmaller[1]);//, CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
-			leftCamWindow->showImage(frameSmaller[0]);
-			rightCamWindow->showImage(frameSmaller[1]);
 			break;
+			
 		case 1:
 
-			cvResize(frameRectified[0], frameSmaller[0], CV_INTER_NN);
-			cvResize(frameRectified[1], frameSmaller[1], CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
+			cvResize(fs->frameRectified[0], fs->frameSmaller[0], CV_INTER_NN);
+			cvResize(fs->frameRectified[1], fs->frameSmaller[1], CV_INTER_NN);
+			drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
 
 			for(int i = 0; i < 2; ++i){
-				if(hand[i]->lastRect.x > -1 ){
-					drawingModule->drawSmallerRectOnFrame(hand[i]->lastRect, frameSmaller[i], cvScalar(200,0,0));
+				if(process->hand[i]->lastRect.x > -1 ){
+					drawingModule->drawSmallerRectOnFrame(process->hand[i]->lastRect, fs->frameSmaller[i], cvScalar(200,0,0));
 					//drawingModule->drawSmallerRectOnFrame(head[0]->lastRect, frameSmaller[0], cvScalar(0,200,0));
 				}
-				if(head[i]->lastRect.x > -1){
-					drawingModule->drawSmallerRectOnFrame(head[i]->lastRect, frameSmaller[i], cvScalar(0,200,0));
+				if(process->head[i]->lastRect.x > -1){
+					drawingModule->drawSmallerRectOnFrame(process->head[i]->lastRect, fs->frameSmaller[i], cvScalar(0,200,0));
 				}
 			}
-			leftCamWindow->showImage(frameSmaller[0]);
-			rightCamWindow->showImage(frameSmaller[1]);
+			leftCamWindow->showImage(fs->frameSmaller[0]);
+			rightCamWindow->showImage(fs->frameSmaller[1]);
 			break;
 		case 2:
-			cvResize(frameSkin[0], frameSmallerGray[0], CV_INTER_NN);
-			cvResize(frameSkin[1], frameSmallerGray[1], CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps > 0 ? fps : 0, frameSmaller[0]);
-			leftCamWindow->showImage(frameSmallerGray[0]);
-			rightCamWindow->showImage(frameSmallerGray[1]);
+			cvResize(fs->frameSkin[0], fs->frameSmallerGray[0], CV_INTER_NN);
+			cvResize(fs->frameSkin[1], fs->frameSmallerGray[1], CV_INTER_NN);
+			drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
+			leftCamWindow->showImage(fs->frameSmallerGray[0]);
+			rightCamWindow->showImage(fs->frameSmallerGray[1]);
 			break;
 		case 3:
 			
-			if(hand[0]->lastRect.x != -1){
-				drawingModule->drawTextOnFrame("znaleziono", frameBlob[0]);
-				drawingModule->drawMiddleOnFrame(hand[0], frameBlob[0]);
+			if(process->hand[0]->lastRect.x != -1){
+				drawingModule->drawTextOnFrame("znaleziono", fs->frameBlob[0]);
+				drawingModule->drawMiddleOnFrame(process->hand[0], fs->frameBlob[0]);
 			}
-			if(hand[1]->lastRect.x != -1){
-				drawingModule->drawTextOnFrame("znaleziono", frameBlob[1]);
-				drawingModule->drawMiddleOnFrame(hand[1], frameBlob[1]);
+			if(process->hand[1]->lastRect.x != -1){
+				drawingModule->drawTextOnFrame("znaleziono", fs->frameBlob[1]);
+				drawingModule->drawMiddleOnFrame(process->hand[1], fs->frameBlob[1]);
 			}
 
-			cvResize(frameBlob[0], frameSmallerGray[0], CV_INTER_NN);
-			cvResize(frameBlob[1], frameSmallerGray[1], CV_INTER_NN);
-			drawingModule->drawFPSonFrame(fps, frameSmallerGray[0]);
-			leftCamWindow->showImage(frameSmallerGray[0]);
-			rightCamWindow->showImage(frameSmallerGray[1]);
+			cvResize(fs->frameBlob[0], fs->frameSmallerGray[0], CV_INTER_NN);
+			cvResize(fs->frameBlob[1], fs->frameSmallerGray[1], CV_INTER_NN);
+			drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
+			leftCamWindow->showImage(fs->frameSmallerGray[0]);
+			rightCamWindow->showImage(fs->frameSmallerGray[1]);
 			
 			break;
-	}*/
 	}
+	//cvResize(fs->trajectory, fs->trajectorySmaller, CV_INTER_NN);
+	//cvResize(fs->disparityToShow, fs->disparitySmaller, CV_INTER_NN);
+	trajectoryWindow->showImage(fs->trajectorySmaller);
+	disparityWindow->showImage(fs->disparityToShow);
 }
 
 void MgrStereoHand::loadFilmClicked0(){
@@ -249,10 +263,8 @@ void MgrStereoHand::loadCalibrationFile(){
 		 Settings::instance()->lastLoadCalibDir = QDir(file);
 		ui.labelCalibrationFile->setText( Settings::instance()->lastLoadCalibDir.relativeFilePath( Settings::instance()->lastLoadCalibDir.dirName()));
 		Settings::instance()->fileCalib = file;
-		/*
 		QByteArray ba = file.toAscii();
 		calibModule->calibrationLoad(ba.data());
-		*/
 	}
 }
 
@@ -262,12 +274,11 @@ void MgrStereoHand::savedCalibrationFromDialog(){
 }
 
 void MgrStereoHand::startProcess(){
-	//nothing = false;
-	qDebug() << "cos robie" << QThread::currentThread()->objectName();
-}
+	process->setNothing(false);
+}                                               
 
 void MgrStereoHand::stopProcess(){
-	//nothing = true;
+	process->setNothing(true);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 }
 
 void MgrStereoHand::changeShowImage(int value){
@@ -280,7 +291,7 @@ void MgrStereoHand::sizeButtonClicked(int id){
 }
 
 void MgrStereoHand::processTypeChanged(int id){
-	//processType = id;
+	Settings::instance()->processType = id;
 	ui.calibrateButton->setEnabled(id != VIDEO);
 }
 
@@ -307,6 +318,27 @@ void MgrStereoHand::realExit(){
 
 void MgrStereoHand::startCalibrationClickedFromDialog(){
 	qDebug() << "start calib";
-	//calibration = true;
-	//nothing = false;
+	process->setCalibration(true);
+	process->setNothing(false);
+}
+
+void MgrStereoHand::errorMessage(QString title, QString message){
+	QMessageBox::information(NULL, title, message);
+}
+
+void MgrStereoHand::startedProcess(){
+	setUIstartEnabled(true);
+}
+
+void MgrStereoHand::finishedProcess(){
+	setUIstartEnabled(false);
+}
+
+void MgrStereoHand::calibrationNotSet(){
+	ui.labelCalibrationFile->setText("plik nie zapisany");
+}
+
+void MgrStereoHand::showOverlay(QString text, int time){
+	displayOverlay(leftCamWindow->name, text.toStdString(), time);
+	displayOverlay(rightCamWindow->name, text.toStdString(), time);
 }

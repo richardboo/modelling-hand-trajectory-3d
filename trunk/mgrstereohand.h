@@ -17,6 +17,7 @@
 #include "processingthread.h"
 #include "framestorage.h"
 
+#include "calibrationmodule.h"
 
 #define STATE_BEFORE_HIST 0
 #define STATE_AFTER_HIST 1
@@ -38,6 +39,11 @@ public:
 public slots:
 	// funkcja odrysowywania w okienkach
 	void showImages();
+	void errorMessage(QString title, QString message);
+	void startedProcess();
+	void finishedProcess();
+	void calibrationNotSet();
+	void showOverlay(QString text, int time);
 
 private:
 	Ui::MgrStereoHandClass ui;
@@ -65,6 +71,7 @@ private:
 	QThread * realProcessingThead;
 	ProcessingThread * process;
 	FrameStorage * fs;
+	CalibrationModule * calibModule;
 
 	void initUI();
 	void initWindows();

@@ -11,6 +11,10 @@ Settings::Settings(void){
 
 	changeTrajectory = false;
 	processType = 0;
+
+	fileFilm0 = "";
+	fileFilm1 = "";
+	fileCalib = "";
 }
 
 Settings::~Settings(void)
