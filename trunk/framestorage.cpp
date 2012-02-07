@@ -55,6 +55,7 @@ void FrameStorage::initFrames(){
 	disparity = cvCreateImage(size, IPL_DEPTH_8U, 1);
 	disparitySmaller = cvCreateImage(smaller, 8, 1);
 	disparityToShow = cvCreateImage(smaller, 8, 3);
+	cvZero(disparityToShow);
 
 	trajectory = cvCreateImage(size, 8, 1);
 	trajectorySmaller = cvCreateImage(smaller, 8, 1);

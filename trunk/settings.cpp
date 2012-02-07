@@ -5,6 +5,7 @@ Settings* Settings::m_Instance = NULL;
 
 Settings::Settings(void){
 	lastLoadCalibDir = QDir("");
+	lastLoadDir = QDir("");
 
 	defSize = cvSize(640, 480);
 	defSmallSize = cvSize(320, 240);

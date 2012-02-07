@@ -28,10 +28,10 @@ bool FaceDetector::init(){
 	return true;
 }
 
-bool FaceDetector::findHeadHaar(IplImage * frame){
-	CvRect biggerLast = head.getBiggerRect(20);
+bool FaceDetector::findHeadHaar(IplImage * frame, Blob * head){
+	CvRect biggerLast = head->getBiggerRect(20);
 	
-	if(head.lastRect.height != -1)
+	if(head->lastRect.height != -1)
 		cvSetImageROI(frame, biggerLast);
 
 	// szukanie twarzy przez Haar'a
@@ -62,23 +62,23 @@ bool FaceDetector::findHeadHaar(IplImage * frame){
 			biggest.height = r->height;
 		}
 	}
-	if(head.lastRect.height != -1){
+	if(head->lastRect.height != -1){
 		cvResetImageROI(frame);
 	}
 
 	if(nextFace.height == -1){
-		head.lastRect.height = -1;
+		head->lastRect.height = -1;
 		return false;
 	}
 
 	// ok, znaleziono
-	if(head.lastRect.height != -1){
-		head.lastRect = cvRect(biggerLast.x+nextFace.x, biggerLast.y + nextFace.y,
+	if(head->lastRect.height != -1){
+		head->lastRect = cvRect(biggerLast.x+nextFace.x, biggerLast.y + nextFace.y,
 			nextFace.width, nextFace.height);
 		lastFound = cvRect(biggerLast.x+nextFace.x, biggerLast.y + nextFace.y,
 			nextFace.width, nextFace.height);
 	}else{
-		head.lastRect = nextFace;
+		head->lastRect = nextFace;
 		lastFound = nextFace;
 	}
 	

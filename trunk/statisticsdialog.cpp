@@ -3,6 +3,8 @@
 
 #include <QString>
 #include <QDateTime>
+#include <QDir>
+#include <QFile>
 
 StatisticsDialog::StatisticsDialog(QWidget *parent)
 	: QDialog(parent)
@@ -51,7 +53,19 @@ QString StatisticsDialog::getStats(){
 QString StatisticsDialog::getFileName(){
 
 	QDateTime dateTime = QDateTime::currentDateTime();
-	QString dateTimeString = dateTime.toString();
-	return QString()+"s"+Settings::instance()->segmantationAlg+"_a"+Settings::instance()->stereoAlg+"_"+dateTimeString;
+	QString dateTimeString = dateTime.toString(Qt::ISODate);
+	dateTimeString = dateTimeString.replace(10, 1, "_");
+	dateTimeString = dateTimeString.replace(QString(":"), QString("_"));
+	QString str;
+	if(!Settings::instance()->fileFilm0.isEmpty()){
+		str = Settings::instance()->fileFilm0;
+		str.chop(5);
+	}
+	else{
+		str = "cam";
+	}
+
+	//QString str = Settings::instance()->fileFilm0.isEmpty()?"":Settings::instance()->fileFilm0;
+	return str.append("_s").append(QString().number( Settings::instance()->segmantationAlg)).append("_a").append(QString().number(Settings::instance()->stereoAlg)).append("_").append(dateTimeString);
 
 }

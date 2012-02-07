@@ -9,10 +9,10 @@ public:
 	~FaceDetector();
 	bool init();
 
-	Blob head;
+	//Blob head;
 	CvRect lastFound;
 
-	bool findHeadHaar(IplImage * frame);
+	bool findHeadHaar(IplImage * frame, Blob * head);
 
 private:
 	static CvHaarClassifierCascade	*cascade;

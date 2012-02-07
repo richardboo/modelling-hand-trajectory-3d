@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QDir>
 
 using namespace std;
 using namespace cv;
@@ -27,6 +28,8 @@ static IplImage * disparityToShow = NULL;
 static IplImage * trajectory = NULL;
 static IplImage * trajectorySmaller = NULL;
 
+static int segmantationAlg;
+static int stereoAlg;
 
 float ALPHA_BG = 0.07f;
 int BG_UPDATE_FRAMES = 35;
@@ -69,7 +72,8 @@ ProcessingThread::ProcessingThread(QObject *parent)
 ProcessingThread::~ProcessingThread(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
-		delete frameGrabber[1];
+		// ONE
+		//delete frameGrabber[1];
 	}
 
 	for(int i = 0; i < 2; ++i){
@@ -121,7 +125,7 @@ void ProcessingThread::process(){
 			bool not2 = getNothing();
 			if(!not2){
 				if(!checkIfStart()){
-					qDebug() << "No trudno";
+					//qDebug() << "No trudno";
 					setNothing(true);
 					continue;
 				}
@@ -151,7 +155,7 @@ void ProcessingThread::process(){
 
 void ProcessingThread::mainLoop(){
 
-	for(int i = 0; i < 1/*ONE*/; ++i){
+	for(int i = 0; i < 2; ++i){
 		if(!frameGrabber[i]->hasNextFrame()){
 			// jesli jest video to zatrzymanie
 			// i zebranie statystyk
@@ -180,7 +184,7 @@ void ProcessingThread::mainLoop(){
 		}
 
 		int i;
-		//#pragma omp parallel for shared(frameRectified,frameShow,frame,frameSkin,segmantationAlg,frameDiff) private(i)
+		#pragma omp parallel for shared(frameRectified,frameShow,frame,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(i = 0; i < 2; ++i){
 
 			//qDebug() << "Hello from thread " << omp_get_thread_num();
@@ -200,11 +204,11 @@ void ProcessingThread::mainLoop(){
 				// pobieranie histogramu skory
 				// pierwsze sprawdzamy to, czy juz jest to zrobione, aby ograniczyc wywolanie porownan
 				
-				if(faceDetection[i]->findHeadHaar(frameRectified[i])){
+				if(faceDetection[i]->findHeadHaar(frameRectified[i], head[i])){
 					// jak znaleziono - update histogramu
-					skinDetection[i]->updateHistogram(frameRectified[i], faceDetection[i]->head.getSmallerRect());
+					skinDetection[i]->updateHistogram(frameRectified[i], head[i]->getSmallerRect());
 					// no i narysujmy ja
-					cvRectangleR(frameShow[i], faceDetection[i]->head.lastRect, cvScalar(0, 0, 255), 2);
+					cvRectangleR(frameShow[i], head[i]->lastRect, cvScalar(0, 0, 255), 2);
 				}
 				drawingModule->drawSamplesOnFrame(skinDetection[i]->getSampleCount(), frameShow[i]);
 
@@ -213,7 +217,7 @@ void ProcessingThread::mainLoop(){
 					skinDetection[i]->skinFound = true;
 
 					// ustawienie wskaznika na twarz, aby mozna bylo znalezc dlon
-					head[i] = &faceDetection[i]->head;
+					//head[i] = &faceDetection[i]->head;
 				}
 
 				// po przejsciu calej petli - jesli mamy juz w obydwu znaleziona skore -konczymy
@@ -230,7 +234,7 @@ void ProcessingThread::mainLoop(){
 					cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 					cvAddWeighted(frameGray[i], ALPHA_BG, frameBackground[i], (1.0-ALPHA_BG), 0.0, frameBackground[i]);
 					if(faceDetection[i]->lastFound.x == -1){
-						faceDetection[i]->findHeadHaar(frameRectified[i]);
+						faceDetection[i]->findHeadHaar(frameRectified[i], head[i]);
 					}
 				}
 				currentBgFrames++;
@@ -251,7 +255,7 @@ void ProcessingThread::mainLoop(){
 			}
 			else{
 
-				//#pragma omp parallel for default (shared) private(i)
+				#pragma omp parallel for default (shared) private(i)
 				for(int i = 0; i < 2; ++i){
 					cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 					if(framesCounter % 50 == 0)
@@ -266,7 +270,8 @@ void ProcessingThread::mainLoop(){
 		handNotFound[0] = 3;
 		handNotFound[1] = 3;
 		bool changeStart = false;
-		//#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
+		
+		#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(int i = 0; i < 2; ++i){
 			skinDetection[i]->detectSkin(frameRectified[i], frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 			handNotFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
@@ -294,13 +299,13 @@ void ProcessingThread::mainLoop(){
 			Settings::instance()->changeTrajectory = false;
 		}
 
-		//qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
+		qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
 
 		// ONE
-		/*
+		
 		if(!handNotFound[0] && !handNotFound[1] && (startRecognized[0] == 2)){
 
-			displayOverlay(leftCamWindow->name, "START RECOGNIZED", 1000);
+			emit showOverlay( "START RECOGNIZED", 1000);
 
 			if(stereoAlg < MINE_)
 				stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
@@ -309,18 +314,18 @@ void ProcessingThread::mainLoop(){
 			
 			cvResize(disparity, disparitySmaller, CV_INTER_NN);
 			drawingModule->drawDispOnFrame(hand[0]->lastZ, disparitySmaller, disparityToShow);
-			disparityWindow->showImage(disparityToShow);
+			//disparityWindow->showImage(disparityToShow);
 		}else{
 			hand[0]->setLastPointWithZ(-1);
 			hand[1]->setLastPointWithZ(-1);
 
 			cvZero(disparityToShow);
-			disparityWindow->showImage(disparityToShow);
+			//disparityWindow->showImage(disparityToShow);
 
 			if(startRecognized[0] >= 3){
-				displayOverlay(leftCamWindow->name, "STOP RECOGNIZED", 1000);
+				emit showOverlay( "STOP RECOGNIZED", 1000);
 			}
-		}*/
+		}
 
 		// odrysowanie trajektorii
 		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
@@ -389,6 +394,8 @@ void ProcessingThread::mainIdleLoop(){
 		cvCopyImage(blackImage, trajectorySmaller);
 		cvCopyImage(blackImage, disparitySmaller);
 	}
+	framesCounter++;
+	updateFPS();
 	emit showImages();
 }
 
@@ -396,7 +403,8 @@ void ProcessingThread::mainIdleLoop(){
 bool ProcessingThread::initCameras(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
-		delete frameGrabber[1];
+		// ONE
+		//delete frameGrabber[1];
 	}
 
 	CameraDevice * cam1 = new CameraDevice(0);
@@ -452,8 +460,11 @@ void ProcessingThread::initModules(){
 bool ProcessingThread::initFilms(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
-		delete frameGrabber[1];
+		//ONE
+		//delete frameGrabber[1];
 	}
+
+	//qDebug() << Settings::instance()->fileFilm0 << Settings::instance()->fileFilm1;
 
 	VideoGrabber * film1 = new VideoGrabber(Settings::instance()->fileFilm0);
 	VideoGrabber * film2 = new VideoGrabber(Settings::instance()->fileFilm1);
@@ -518,8 +529,6 @@ bool ProcessingThread::checkIfStart(){
 			return false;
 		}
 		else{
-			Settings::instance()->fileFilm0 = "";
-			Settings::instance()->fileFilm1 = "";
 			return true;
 		}
 	}
@@ -561,6 +570,12 @@ void ProcessingThread::makeEverythingStop(){
 	if(processType == VIDEO){
 		initCameras();
 	}
+
+	// reinicjalizacja fps
+	framesCounter = 0;
+	fps = 0;
+	initGameTime();
+
 	emit finishedProcess();
 	// wszystko co jest potrzebne do zastopowania
 }
@@ -597,7 +612,7 @@ void ProcessingThread::recordFilms(){
 
 	// UWAGA!
 	// ostatni dir
-	QString file1;// = QFileDialog::getSaveFileName(NULL, tr("Zapisz film 1"), lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
+	QString file1 = QFileDialog::getSaveFileName(NULL, tr("Zapisz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
 	QString file2;
 	
 	statisticsDialog->fps = fps;
@@ -610,7 +625,11 @@ void ProcessingThread::recordFilms(){
 
 	bool saved = false;
 	if(file1 != NULL && !file1.isEmpty()){
-		file2 = QFileDialog::getSaveFileName(NULL, tr("Zapisz film 2"), file1, tr("Filmy (*.avi)"));
+		file1.chop(4);
+		file2 = QString(file1);
+		file1.append("_0.avi");
+		file2.append("_1.avi");
+
 		if(file2 != NULL && !file2.isEmpty()){
 			
 			if(Settings::instance()->fileCalib.isEmpty()){
@@ -682,7 +701,9 @@ void ProcessingThread::storeStatistics(){
 }
 
 void ProcessingThread::saveStatistics(QString file){
-	QFile fileTrj("stat_"+file+".txt");
+	
+	QString filePath = file.append(".txt");
+	QFile fileTrj(filePath);
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
 
@@ -695,7 +716,7 @@ void ProcessingThread::saveStatistics(QString file){
 
 QString ProcessingThread::saveTrajectory(QString file){
 	
-	QFile fileTrj("traj_"+file+".trj");
+	QFile fileTrj(file+".trj");
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
 
@@ -740,6 +761,7 @@ QString ProcessingThread::saveTrajectory(QString file){
 bool ProcessingThread::reinitAll(){
 
 	bool all = true;
+	processType = Settings::instance()->processType;
 	if(processType == VIDEO){
 		all = initFilms();
 	}
