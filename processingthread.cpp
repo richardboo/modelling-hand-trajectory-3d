@@ -34,6 +34,7 @@ static int stereoAlg;
 float ALPHA_BG = 0.07f;
 int BG_UPDATE_FRAMES = 35;
 int BKG_THRESH = 15;
+int FRAMES_TILL_HAND = 15;
 
 
 ProcessingThread::ProcessingThread(QObject *parent)
@@ -59,12 +60,29 @@ ProcessingThread::ProcessingThread(QObject *parent)
 	fpsUpdateInterval = 0.5f;
 	numFrames         = 0;
 	fps               = 0;
-	bps				  = 0;
-	allBits			  = 0;
 	startTime		  = 0;
 	endTime			  = 0;
 	ticksPerSecond	  = 0;
 	timeAtGameStart   = 0;
+
+	startProcessTime = 0;
+	endProcessTime = 0;
+
+	skinTime = 0;
+	counterSkin = 0;
+	stereoTime = 0;
+
+	framesStartStopCounter = 0;
+	framesProcessingCounter = 0;
+
+	duringRecognition = false;
+
+	// probka obrazu dloni
+	for(int i = 0; i < 2; ++i){
+		imageHand[i] = cvCreateImage(Settings::instance()->defSize, 8, 3);
+		cvZero(imageHand[i]);
+	}
+	counterTillHandGet = FRAMES_TILL_HAND;
 
 	drawingModule = new DrawingModule;
 }
@@ -81,9 +99,11 @@ ProcessingThread::~ProcessingThread(){
 			delete hand[i];
 		if(head[i] != NULL)
 			delete head[i];
+		cvReleaseImage(&imageHand[i]);
 	}
 	delete drawingModule;
 	delete srModule;
+	
 }
 
 void ProcessingThread::init(FrameStorage * f, CalibrationModule * calibMod, CalibrationDialog * dial,
@@ -188,15 +208,18 @@ void ProcessingThread::mainLoop(){
 		for(i = 0; i < 2; ++i){
 
 			//qDebug() << "Hello from thread " << omp_get_thread_num();
-
-			// jakbym chciala liczyc czas
-			//time(&beginActionTime);
 			calibModule->rectifyImage(frame[i], frameRectified[i], i);
-			//time(&endActionTime);
-			//avgRectifyTime += difftime(beginActionTime, beginActionTime);
-
 			cvCopyImage(frame[i], frameShow[i]);
 		}
+
+//////////////// STAT ///////////////////////////
+		counterTillHandGet--;
+		if(counterTillHandGet == 0){
+			cvCopyImage(frame[0], imageHand[0]);
+			cvCopyImage(frame[1], imageHand[1]);
+			emit showOverlay("Pobrana probka dloni", 1000);
+		}
+/////////////////////////////////////////////////
 
 		if((segmantationAlg == HIST_ || segmantationAlg == ALL_) && stateHist != STATE_AFTER_HIST){
 			for(int i = 0; i < 2; ++i){
@@ -271,8 +294,12 @@ void ProcessingThread::mainLoop(){
 		handNotFound[1] = 3;
 		bool changeStart = false;
 		
+//////////////// STAT ///////////////////////////
+		time(&tempStart);
+/////////////////////////////////////////////////
 		#pragma omp parallel for shared(changeStart, frameRectified,frameShow,frame,frameBlob,frameSkin,segmantationAlg,frameDiff) private(i)
 		for(int i = 0; i < 2; ++i){
+
 			skinDetection[i]->detectSkin(frameRectified[i], frameSkin[i], rect, segmantationAlg, frameDiff[i]);
 			handNotFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
 			
@@ -288,6 +315,11 @@ void ProcessingThread::mainLoop(){
 				}
 			}
 		}
+//////////////// STAT ///////////////////////////
+		time(&tempEnd);
+		skinTime += difftime(tempEnd, tempStart);
+		counterSkin++;
+/////////////////////////////////////////////////
 
 		// stan obydwu to minimum z nich
 		int minRec = min(startRecognized[0], startRecognized[1]);
@@ -301,35 +333,56 @@ void ProcessingThread::mainLoop(){
 
 		qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
 
-		// ONE
+//////////////// STAT ///////////////////////////
+		if(duringRecognition){
+			framesStartStopCounter++;
+		}
+/////////////////////////////////////////////////
 		
 		if(!handNotFound[0] && !handNotFound[1] && (startRecognized[0] == 2)){
 
 			emit showOverlay( "START RECOGNIZED", 1000);
+			
+//////////////// STAT ///////////////////////////
+			if(!duringRecognition){
+				duringRecognition = true;
+				time(&startProcessTime);
+			}
+			framesProcessingCounter++;
+			time(&tempStart);
+/////////////////////////////////////////////////
 
 			if(stereoAlg < MINE_)
 				stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
 			else
 				stereoModule->stereoProcessMine(frameGray, frameBlob, hand, disparity, stereoAlg);
 			
+//////////////// STAT ///////////////////////////
+			time(&tempEnd);
+			stereoTime += difftime(tempEnd, tempStart);
+/////////////////////////////////////////////////
+
 			cvResize(disparity, disparitySmaller, CV_INTER_NN);
 			drawingModule->drawDispOnFrame(hand[0]->lastZ, disparitySmaller, disparityToShow);
-			//disparityWindow->showImage(disparityToShow);
+
 		}else{
 			hand[0]->setLastPointWithZ(-1);
 			hand[1]->setLastPointWithZ(-1);
 
 			cvZero(disparityToShow);
-			//disparityWindow->showImage(disparityToShow);
 
 			if(startRecognized[0] >= 3){
 				emit showOverlay( "STOP RECOGNIZED", 1000);
+				
+//////////////// STAT ///////////////////////////
+				duringRecognition = false;
+				time(&endProcessTime);
+/////////////////////////////////////////////////
 			}
 		}
 
 		// odrysowanie trajektorii
 		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
-		//trajectoryWindow->showImage(trajectorySmaller);
 	}
 	else{
 	// KALIBRACJA
@@ -341,10 +394,7 @@ void ProcessingThread::mainLoop(){
 			fs->frameSmaller[0] = fs->blackImage;
 			fs->frameSmaller[1] = fs->blackImage;
 			emit showImages();
-			/*
-			leftCamWindow->showImage(blackImage);
-			rightCamWindow->showImage(blackImage);
-			*/
+
 			// kalibracja
 			ImageUtils::getGray(frame[0], frameGray[0]);
 			ImageUtils::getGray(frame[1], frameGray[1]);
@@ -614,14 +664,6 @@ void ProcessingThread::recordFilms(){
 	// ostatni dir
 	QString file1 = QFileDialog::getSaveFileName(NULL, tr("Zapisz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
 	QString file2;
-	
-	statisticsDialog->fps = fps;
-	statisticsDialog->bps = bps;
-	statisticsDialog->allBits = allBits;
-	statisticsDialog->allFrames = numFrames;
-	statisticsDialog->file1 = "";
-	statisticsDialog->file2 = "";
-	statisticsDialog->calibration = Settings::instance()->fileCalib;
 
 	bool saved = false;
 	if(file1 != NULL && !file1.isEmpty()){
@@ -629,6 +671,9 @@ void ProcessingThread::recordFilms(){
 		file2 = QString(file1);
 		file1.append("_0.avi");
 		file2.append("_1.avi");
+
+		Settings::instance()->fileFilm0 = file1;
+		Settings::instance()->fileFilm1 = file2;
 
 		if(file2 != NULL && !file2.isEmpty()){
 			
@@ -640,9 +685,6 @@ void ProcessingThread::recordFilms(){
 				QMessageBox::information(NULL, "Kalibracja", QString("Plik kalibracji zapisany do pliku ").append(file1));
 				Settings::instance()->fileCalib = file1;
 			}
-			statisticsDialog->calibration = Settings::instance()->fileCalib;
-			statisticsDialog->file1 = file1;
-			statisticsDialog->file2 = file2;
 
 			QByteArray ba1 = file1.toAscii();
 			QByteArray ba2 = file2.toAscii();
@@ -660,6 +702,13 @@ void ProcessingThread::recordFilms(){
 			saved = true;
 		}
 	}
+	else{
+		Settings::instance()->fileFilm0 = "";
+		Settings::instance()->fileFilm1 = "";
+	}
+
+	// zebranie statystyk
+	storeStatistics();
 
 	QString file = statisticsDialog->getFileName();
 	statisticsDialog->trajectory = saveTrajectory(file);
@@ -684,16 +733,27 @@ void ProcessingThread::storeStatistics(){
 	emit showImages();
 	emit showOverlay("Zapisywanie...", 100000);
 
+	QString file = statisticsDialog->getFileName();
+
+	cvSaveImage(QString(file+("_screen0.jpg")).toStdString().c_str(), imageHand[0]);
+	cvSaveImage(QString(file+("_screen1.jpg")).toStdString().c_str(), imageHand[1]);
+
 	statisticsDialog->fps = fps;
-	statisticsDialog->bps = bps;
-	statisticsDialog->allBits = allBits;
-	statisticsDialog->allFrames = numFrames;
 	statisticsDialog->file1 = Settings::instance()->fileFilm0;
 	statisticsDialog->file2 = Settings::instance()->fileFilm1;
 	statisticsDialog->calibration = Settings::instance()->fileCalib;
+	statisticsDialog->img1 = file+("_screen0.jpg");
+	statisticsDialog->img2 = file+("_screen1.jpg");
 
-	QString file = statisticsDialog->getFileName();
+	statisticsDialog->timeProcess = (int)difftime(endProcessTime, startProcessTime);
+	statisticsDialog->framesProcess = framesStartStopCounter;
+	statisticsDialog->framesProper = framesProcessingCounter;
+
+	statisticsDialog->timeSkin = skinTime*1000.0f/(float)counterSkin;
+	statisticsDialog->timeStereo = stereoTime*1000.0f/(float)framesProcessingCounter;
+
 	statisticsDialog->trajectory = saveTrajectory(file);
+	
 	statisticsDialog->showStatistics();
 	saveStatistics(file);
 
@@ -766,6 +826,7 @@ bool ProcessingThread::reinitAll(){
 		all = initFilms();
 	}
 
+	duringRecognition = false;
 	startRecognized[0] = startRecognized[1] = 0;
 	lastStart[0] = lastStart[1] = false;
 	Settings::instance()->changeTrajectory = false;
@@ -786,10 +847,23 @@ bool ProcessingThread::reinitAll(){
 	framesCounter = 0;
 	fps = 0;
 	initGameTime();
-	allBits = 0;
-	bps = 0;
 	numFrames = 0;
 	currentBgFrames = 0;
+
+	startProcessTime = 0;
+	endProcessTime = 0;
+
+	skinTime = 0;
+	counterSkin = 0;
+	stereoTime = 0;
+
+	framesStartStopCounter = 0;
+	framesProcessingCounter = 0;
+
+	// obraz dloni przy rozpoczeciu i zakonczeniu rozpoznawania
+	cvZero(imageHand[0]);
+	cvZero(imageHand[1]);
+	counterTillHandGet = FRAMES_TILL_HAND;
 
 	stereoAlg = Settings::instance()->stereoAlg;
 	segmantationAlg = Settings::instance()->segmantationAlg;
@@ -892,27 +966,19 @@ bool ProcessingThread::getNothing(){
 // statystyki fps
 void ProcessingThread::updateFPS(){
 	numFrames++;
-	allBits += (frame[0]->imageSize);
 	//float currentUpdate = getGameTime();
-	if(startTime == 0)
+	if(startTime == 0){
 		time(&startTime);
+		return;
+	}
 
 	time(&endTime);
 	fps = numFrames /(difftime(endTime, startTime));
-	bps = allBits / (difftime(endTime, startTime));
 }
 
 void ProcessingThread::initGameTime(){
 
 	startTime = 0;
-
-	avgFindSkinTime = 0;
-	avgRectifyTime = 0;
-	avgFindHandTime = 0;
-	avgStereoTime = 0;
-
-	beginActionTime = 0;
-	endActionTime = 0;
 }
 
 // Called every time you need the current game time
