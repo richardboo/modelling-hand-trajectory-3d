@@ -6,12 +6,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <vector>
+#include <QObject>
 
 #include "blob.hpp"
 
 
-class CalibrationModule
+class CalibrationModule: public QObject
 {
+	Q_OBJECT
+
 private:
 	
 	int cornersX,cornersY,cornersN;
@@ -61,6 +64,9 @@ public:
     bool getCalibrationDone()	{return calibrationDone;}
     int getSampleCount()		{return sampleCount;}
 	int getMaxSamples()			{return maxSamples;}
+
+signals:
+	void calibrationEnded();
 
 	// dla gpu
 	/*

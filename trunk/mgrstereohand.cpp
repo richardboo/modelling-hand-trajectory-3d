@@ -55,6 +55,8 @@ bool MgrStereoHand::init(){
 	connect(process, SIGNAL(finishedProcess()), this, SLOT(finishedProcess()));
 	connect(process, SIGNAL(calibrationNotSet()), this, SLOT(calibrationNotSet()));
 	connect(process, SIGNAL(showOverlay(QString,int)), this, SLOT(showOverlay(QString,int)));
+	connect(process, SIGNAL(getFilmFileName()), this, SLOT(getFilmFileName()));
+	//connect(this, SIGNAL(showOverlay(QString,int)), this, SLOT(showOverlay(QString,int)));
 	
 	realProcessingThead->start();
 
@@ -353,4 +355,9 @@ void MgrStereoHand::calibrationNotSet(){
 void MgrStereoHand::showOverlay(QString text, int time){
 	displayOverlay(leftCamWindow->name, text.toStdString(), time);
 	displayOverlay(rightCamWindow->name, text.toStdString(), time);
+}
+
+void MgrStereoHand::getFilmFileName(){
+	QString file1 = QFileDialog::getSaveFileName(NULL, tr("Zapisz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
+	process->recordFilms(file1);
 }

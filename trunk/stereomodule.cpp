@@ -9,6 +9,7 @@ CvStereoBMState StereoModule::BMState;
 CvStereoBMState StereoModule::BMStateCuda;
 MyHandBM StereoModule::myHandBMState;
 
+
 StereoModule::StereoModule(void)
 {
 }
@@ -17,6 +18,34 @@ StereoModule::~StereoModule(void)
 {
 }
 
+void StereoModule::initStates(){
+	BMState.preFilterSize=7;
+    BMState.preFilterCap=21;
+    BMState.SADWindowSize=21;
+    BMState.minDisparity=0;
+    BMState.numberOfDisparities=64;
+    BMState.textureThreshold=1;
+    BMState.uniquenessRatio=1;
+
+	BMStateCuda.preFilterSize=7;
+    BMStateCuda.preFilterCap=21;
+    BMStateCuda.SADWindowSize=21;
+    BMStateCuda.minDisparity=0;
+    BMStateCuda.numberOfDisparities=64;
+    BMStateCuda.textureThreshold=1;
+    BMStateCuda.uniquenessRatio=1;
+
+	sgbm.preFilterCap = 31;
+    sgbm.SADWindowSize = 11;
+    sgbm.P1 = 2*8*sgbm.SADWindowSize*sgbm.SADWindowSize;
+    sgbm.P2 = 2*32*sgbm.SADWindowSize*sgbm.SADWindowSize;
+    sgbm.minDisparity = 0;
+    sgbm.numberOfDisparities = 32;
+    sgbm.uniquenessRatio = 1;
+    sgbm.speckleWindowSize = 400;
+    sgbm.speckleRange = 16;
+    sgbm.disp12MaxDiff = 2;
+}
 
 
 void StereoModule::stereoStart(CvSize & size){
@@ -61,13 +90,14 @@ void StereoModule::stereoStart(CvSize & size){
 	onlyHandNormalized[1] = cvCreateImage(size, 8, 1);
 
 	disp = Mat(Size(size), CV_8U);
-/*
-GPU
+
+//GPU
+	/*
 	d_disp = gpu::GpuMat(Size(size), CV_8U);
 
 	d_remapped1 = gpu::GpuMat(Size(size), CV_8UC3); 
 	d_remapped2 = gpu::GpuMat(Size(size), CV_8UC3); 
-*/
+	*/
 }
 
 
@@ -83,10 +113,13 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		*/
 	}
 	else if(type == BM_){
+		BMState.roi1 = hands[0]->lastRect;
+		BMState.roi2 = hands[1]->lastRect;
 		cvFindStereoCorrespondenceBM( rectifiedGray[0], rectifiedGray[1], disparityNotNormalized, &BMState);
 		cvNormalize( disparityNotNormalized, andImage, 0, 256, CV_MINMAX );
 	}
 	else if(type == SGBM_){
+		
 		sgbm(Mat(rectifiedGray[0]), Mat(rectifiedGray[1]), disparityNNmat);
 		disparityNNmat.convertTo(disp, CV_8U, 255/(sgbm.numberOfDisparities*16.));
 		andImage = &IplImage(disp);
@@ -232,6 +265,9 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		}
 		cvAddS(andImage, cvScalar(halfDisp+realDiffBetween,0,0), andImage, blobs[0]);
 		cvSmooth(andImage, andImage, CV_MEDIAN, 3);
+
+		cvCopyImage(andImage, disparity);
+		return;
 		
 		cvSetImageROI(disparity, hands[0]->lastRect);
 		cvSetImageROI(blobs[0], hands[0]->lastRect);
