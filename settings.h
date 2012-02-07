@@ -74,13 +74,13 @@ public:
 	int getBkg()			{ return bkg; }
 
 	// settery
-	void setImageType(int newOne)		{ imageType = newOne; qDebug() << "im type: " << newOne; }
+	void setImageType(int newOne)		{ imageType = newOne; }
 	void setSize(int id);
 
-	void setSegmantationAlg(int newOne)	{ segmantationAlg = newOne; qDebug() << "segm: " << newOne; }
-	void setStereoAlg(int newOne)		{ stereoAlg = newOne; qDebug() << "stereo: " << newOne;}
-	void setLight(int newOne)			{ light = newOne; qDebug() << "lisght: " << newOne;}
-	void setBkg(int newOne)				{ bkg = newOne; qDebug() << "bkg: " << newOne;}
+	void setSegmantationAlg(int newOne)	{ segmantationAlg = newOne; }
+	void setStereoAlg(int newOne)		{ stereoAlg = newOne;}
+	void setLight(int newOne)			{ light = newOne; }
+	void setBkg(int newOne)				{ bkg = newOne; }
 
 	void initImageType(int current);
 	void initSize(int current);
@@ -99,6 +99,7 @@ public:
 	CvSize imageSize;
 
 	QDir lastLoadCalibDir;
+	QDir lastLoadDir;
 
 	CvSize defSize;
 	CvSize defSmallSize;

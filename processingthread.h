@@ -136,8 +136,6 @@ private:
 	int processType;
 	int stateHist;
 	int stateBack;
-	int segmantationAlg;
-	int stereoAlg;
 	int currentBgFrames;
 	
 	// stan rozpoznania pobierania trajektorii dla kazdego z obrazow

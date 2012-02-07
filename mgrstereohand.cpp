@@ -62,8 +62,6 @@ bool MgrStereoHand::init(){
 
 void MgrStereoHand::initUI(){
 
-	lastLoadDir = QDir("");
-
 	// rozmiar przetwarzania
 	sizeGroup = new QButtonGroup(this);
 	sizeGroup->addButton(ui.radioButtonSize0, 0);
@@ -169,6 +167,17 @@ void MgrStereoHand::initWindows(){
 
 void MgrStereoHand::showImages(){
 
+	if(process->getNothing()){
+		cvResize(fs->frameShow[0], fs->frameSmaller[0]);//, CV_INTER_NN);
+		cvResize(fs->frameShow[1], fs->frameSmaller[1]);//, CV_INTER_NN);
+		drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
+		leftCamWindow->showImage(fs->frameSmaller[0]);
+		rightCamWindow->showImage(fs->frameSmaller[1]);
+		trajectoryWindow->showImage(fs->trajectorySmaller);
+		disparityWindow->showImage(fs->disparityToShow);
+		return;
+	}
+
 	switch(Settings::instance()->imageType){
 
 		case 0:
@@ -240,17 +249,19 @@ void MgrStereoHand::loadFilmClicked1(){
 
 QString MgrStereoHand::loadFilm(int id){
 
-	QString file = QFileDialog::getOpenFileName(NULL, tr("Wybierz film"), lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
+	QString file = QFileDialog::getOpenFileName(NULL, tr("Wybierz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
 	if(file != NULL){
-		lastLoadDir = QDir(file);
+		Settings::instance()->lastLoadDir = QDir(file);
 
 		if(id == 0){
-			ui.labelFilm0->setText(lastLoadDir.relativeFilePath(lastLoadDir.dirName()));
+			ui.labelFilm0->setText(Settings::instance()->lastLoadDir.relativeFilePath(Settings::instance()->lastLoadDir.dirName()));
 			Settings::instance()->fileFilm0 = file;
 		}else{
-			ui.labelFilm1->setText(lastLoadDir.relativeFilePath(lastLoadDir.dirName()));
+			ui.labelFilm1->setText(Settings::instance()->lastLoadDir.relativeFilePath(Settings::instance()->lastLoadDir.dirName()));
 			Settings::instance()->fileFilm1 = file;
 		}
+
+		//qDebug() << Settings::instance()->fileFilm0 << Settings::instance()->fileFilm1;
 
 		ui.processButtonRadio0->click();
 	}
@@ -317,7 +328,7 @@ void MgrStereoHand::realExit(){
 }
 
 void MgrStereoHand::startCalibrationClickedFromDialog(){
-	qDebug() << "start calib";
+	//qDebug() << "start calib";
 	process->setCalibration(true);
 	process->setNothing(false);
 }

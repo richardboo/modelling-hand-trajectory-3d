@@ -81,7 +81,7 @@ void Blob::setLastPointWithZ(int z){
 	}else{
 		lastXYZ = cvPoint3D32f(lastPoint.x, lastPoint.y, z);
 		lastDisp = z;
-		qDebug() << "point: " << lastPoint.x << lastPoint.y << z;
+		//qDebug() << "point: " << lastPoint.x << lastPoint.y << z;
 	}
 	allXYZ.push_front(lastXYZ);
 	lastZ = z;

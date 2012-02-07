@@ -55,8 +55,6 @@ private:
 	AlgorithmsDialog * algorithmsDialog;
 	StatisticsDialog * statisticsDialog;
 	CalibrationDialog * calibDialog;
-
-	QDir lastLoadDir;
 	
 	// okna
 	MyWindow * leftCamWindow;
