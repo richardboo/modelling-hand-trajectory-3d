@@ -91,7 +91,7 @@ ProcessingThread::~ProcessingThread(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
 		// ONE
-		//delete frameGrabber[1];
+		delete frameGrabber[1];
 	}
 
 	for(int i = 0; i < 2; ++i){
@@ -113,6 +113,8 @@ void ProcessingThread::init(FrameStorage * f, CalibrationModule * calibMod, Cali
 	calibModule = calibMod;
 	calibDialog = dial;
 	statisticsDialog = statDial;
+
+	StereoModule::initStates();
 
 	initFrames();
 	initCameras();
@@ -168,7 +170,7 @@ void ProcessingThread::process(){
 		}catch(Exception ex){
 			
 		}
-		Sleep(100);
+		//Sleep(100);
 	}
 	emit finished();
 }
@@ -391,8 +393,8 @@ void ProcessingThread::mainLoop(){
 		if(framesCounter % 10 == 0){
 
 			// migniecie
-			fs->frameSmaller[0] = fs->blackImage;
-			fs->frameSmaller[1] = fs->blackImage;
+			cvZero(frameShow[0]);
+			cvZero(frameShow[1]);
 			emit showImages();
 
 			// kalibracja
@@ -404,10 +406,11 @@ void ProcessingThread::mainLoop(){
 			if(calibModule->getSampleCount() == calibModule->getMaxSamples()){
 
 				//framesTimer->stop();
+				emit showOverlay("Kalibracja...", 2000);
 				calibModule->calibrationEnd();
-				calibDialog->endCalibration();
+				//calibDialog->endCalibration();
+				//setCalibration(false);
 				setNothing(true);
-				setCalibration(false);
 			}
 			else{
 				return;
@@ -426,7 +429,7 @@ void ProcessingThread::mainLoop(){
 void ProcessingThread::mainIdleLoop(){
 	if(frameGrabber[0] != NULL && frameGrabber[1] != NULL){
 
-		for(int i = 0; i < 1/*ONE*/; ++i){
+		for(int i = 0; i < 2; ++i){
 			if(!frameGrabber[i]->hasNextFrame()){
 				return;
 			}
@@ -454,19 +457,19 @@ bool ProcessingThread::initCameras(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
 		// ONE
-		//delete frameGrabber[1];
+		delete frameGrabber[1];
 	}
 
 	CameraDevice * cam1 = new CameraDevice(0);
-	CameraDevice * cam2 = cam1;
+	//CameraDevice * cam2 = cam1;
 	// ONE
-	//CameraDevice * cam2 = new CameraDevice(1);
+	CameraDevice * cam2 = new CameraDevice(1);
 
 	// ONE
 	cam1->init(Settings::instance()->defSize.width,
 				   Settings::instance()->defSize.height);
 
-/*
+
 	if(!cam1->init(Settings::instance()->defSize.width,
 				   Settings::instance()->defSize.height) || 
 	   !cam2->init(Settings::instance()->defSize.width,
@@ -475,7 +478,7 @@ bool ProcessingThread::initCameras(){
 		frameGrabber[1] = NULL;
 		return false;
 	}
-*/
+
 
 	frameGrabber[0] = cam1;
 	frameGrabber[1] = cam2;
@@ -511,7 +514,7 @@ bool ProcessingThread::initFilms(){
 	if(frameGrabber[0] != NULL){
 		delete frameGrabber[0];
 		//ONE
-		//delete frameGrabber[1];
+		delete frameGrabber[1];
 	}
 
 	//qDebug() << Settings::instance()->fileFilm0 << Settings::instance()->fileFilm1;
@@ -604,7 +607,8 @@ void ProcessingThread::makeEverythingStop(){
 	bool cal = getCalibration();
 	// nagranie
 	if(processType == CAMERA && !cal){
-		recordFilms();
+		//recordFilms();
+		emit getFilmFileName();
 	}else if(!cal){
 		storeStatistics();
 	}
@@ -613,8 +617,8 @@ void ProcessingThread::makeEverythingStop(){
 	if(cal){
 		setCalibration(false);
 		// plik nie zapisany
-		emit calibrationNotSet();
-		Settings::instance()->fileCalib = "";
+		//emit calibrationNotSet();
+		//Settings::instance()->fileCalib = "";
 	}
 
 	if(processType == VIDEO){
@@ -624,6 +628,7 @@ void ProcessingThread::makeEverythingStop(){
 	// reinicjalizacja fps
 	framesCounter = 0;
 	fps = 0;
+	numFrames = 0;
 	initGameTime();
 
 	emit finishedProcess();
@@ -642,7 +647,7 @@ void ProcessingThread::makeEverythingStart(){
 	emit startedProcess();
 }
 
-void ProcessingThread::recordFilms(){
+void ProcessingThread::recordFilms(QString file1){
 
 	// 1. czy jest kalibracja
 	//    - nie ma: trzeba zapisac, nie zapisac - KONIEC
@@ -662,7 +667,7 @@ void ProcessingThread::recordFilms(){
 
 	// UWAGA!
 	// ostatni dir
-	QString file1 = QFileDialog::getSaveFileName(NULL, tr("Zapisz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
+	//QString file1;// = QFileDialog::getSaveFileName(NULL, tr("Zapisz film"), Settings::instance()->lastLoadDir.absolutePath(), tr("Filmy (*.avi)"));
 	QString file2;
 
 	bool saved = false;

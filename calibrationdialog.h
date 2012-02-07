@@ -15,11 +15,14 @@ public:
 	~CalibrationDialog();
 
 	void init(CalibrationModule * module);
-	void endCalibration();
+	//void endCalibration();
 
 	int getBoardSize1(){	return boardSize1;	}
 	int getBoardSize2(){	return boardSize2;	}
 	int getSampleCounter(){	return sampleCounter;	}
+
+public slots:
+	void endCalibration();
 
 
 private:

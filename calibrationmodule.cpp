@@ -123,7 +123,7 @@ int CalibrationModule::calibrationEnd(){
 			cvResize(imageWithCorners, smaller[1]);
 			cvShowImage("kamera 2", smaller[1]);
 			cv::displayOverlay("kamera 2", "Znaleziona szachownica kamera 2", 1000);
-			cvWaitKey(500);
+			//cvWaitKey(500);
 		}
 		
 	}
@@ -131,7 +131,8 @@ int CalibrationModule::calibrationEnd(){
 	cvReleaseImage(&smaller[0]);
 	cvReleaseImage(&smaller[1]);
 
-
+	cv::displayOverlay("kamera 1", "Przeprowadzam kalibracje...", 3000);
+	cv::displayOverlay("kamera 2", "Przeprowadzam kalibracje...", 3000);
 	//cvDestroyWindow("corners");
 
     // ARRAY AND VECTOR STORAGE:
@@ -246,6 +247,8 @@ GPU
 	d_my2 = m_my2;
 */
     calibrationDone = true;
+
+	emit calibrationEnded();
 
     return RESULT_OK;
 }

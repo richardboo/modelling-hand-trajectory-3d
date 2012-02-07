@@ -35,7 +35,10 @@ void StatisticsDialog::showStatistics(){
 	stats += "Przetwarzanie: \t" + QString::number(timeProcess) + "s\n";
 	stats += "Klatki przetworzone: \t" + QString::number(framesProcess) + "\n";
 	stats += "Poprawnie przetworzone: \t" + QString::number(framesProper) +"\n";
-	stats += "Procent poprawny: \t" + QString::number(framesProper*100/framesProcess) +"%\n\n";
+	if(framesProper > 0)
+		stats += "Procent poprawny: \t" + QString::number(framesProper*100/framesProcess) +"%\n\n";
+	else
+		stats += "Procent poprawny: \t0%\n\n" ;
 
 	stats += "Segmentacja dloni (avg): \t" + QString::number(timeSkin) + "ms\n";
 	stats += "Stereo dopasowanie (avg): \t" + QString::number(timeStereo) + "ms\n\n";

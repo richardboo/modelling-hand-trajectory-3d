@@ -60,6 +60,7 @@ public:
 
 public slots:
 	void process();
+	void recordFilms(QString file1);
 
 signals:
 	void finished();
@@ -69,6 +70,7 @@ signals:
 	void finishedProcess();
 	void calibrationNotSet();
 	void showOverlay(QString text, int time);
+	void getFilmFileName();
 
 private:
 	void mainLoop();
@@ -90,7 +92,7 @@ private:
 	
 
 	// zapis
-	void recordFilms();
+	
 	void storeStatistics();
 	void saveStatistics(QString file);
 	QString saveTrajectory(QString file);

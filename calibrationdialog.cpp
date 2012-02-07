@@ -46,6 +46,8 @@ void CalibrationDialog::initUI(){
 
 void CalibrationDialog::init(CalibrationModule * module){
 	calibModule = module;
+
+	connect(calibModule, SIGNAL(calibrationEnded()), this, SLOT(endCalibration()));
 }
 
 

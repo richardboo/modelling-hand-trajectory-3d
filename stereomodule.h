@@ -24,6 +24,8 @@ public:
 	int stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs[2], Blob * hands[2], IplImage * disparity, int type);
 	void stereoProcessMine(IplImage* rectified[2], IplImage * blobs[2], Blob * hands[2], IplImage * disparity, int type);
 
+	static void initStates();
+
 	static cv::StereoSGBM sgbm;
 	static CvStereoBMState BMState;
 	static CvStereoBMState BMStateCuda;
@@ -31,18 +33,19 @@ public:
 	IplImage * disparityNotNormalized, * andImage;
 	IplImage * onlyHandNormalized[2];
 
+
+
 	// 8 - max disparity dla moich alg
 	//IplImage * diffImage[8];
 
 	Mat disp, disparityNNmat, 
 		m_remap1, m_remap2, m_remapped1, m_remapped2;
-/*
-GPU
+
+//GPU
+	/*	
 	gpu::StereoBM_GPU bm;
 	gpu::StereoConstantSpaceBP csbp;
 
-	Mat disp, disparityNNmat, 
-		m_remap1, m_remap2, m_remapped1, m_remapped2;
 	gpu::GpuMat d_disp; 
 	gpu::GpuMat d_left, d_right;
 	

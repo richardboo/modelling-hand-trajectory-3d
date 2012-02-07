@@ -44,6 +44,7 @@ public slots:
 	void finishedProcess();
 	void calibrationNotSet();
 	void showOverlay(QString text, int time);
+	void getFilmFileName();
 
 private:
 	Ui::MgrStereoHandClass ui;
