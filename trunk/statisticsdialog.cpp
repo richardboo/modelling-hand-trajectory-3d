@@ -20,24 +20,32 @@ StatisticsDialog::~StatisticsDialog()
 
 void StatisticsDialog::showStatistics(){
 
-	QString stats = "Algorytm segmentacji:\t" + Settings::instance()->getSegmantationString() + "\n";
+	QString stats = "..SRODOWISKO..\n\n";
+		
+	stats += "Algorytm segmentacji:\t" + Settings::instance()->getSegmantationString() + "\n";
 	stats += "Algorytm stereo dopasowania:\t" + Settings::instance()->getStereoString() + "\n\n";
 
 	stats += "Oswietlenie:\t" + Settings::instance()->getLightString()+"\n";
 	stats += "Tlo:\t" + Settings::instance()->getBkgString()+"\n\n";
 
-	stats += "FPS:\t" + QString::number(fps) + "\n";
-	stats += "KBps:\t" + QString::number(bps/1024) + "\n";
+	//stats += "FPS:\t" + QString::number(fps) + "\n\n";
 
-	stats += "Ilosc klatek:\t" + QString::number(allFrames) + "\n";
-	stats += "Ilosc danych:\t" + QString::number(allBits/1024)+"KB\n";
-	//stats += "Dlugosc filmu:\t" + QString::number(timeS)+"\n\n";
+	stats += "..BADANIE POBIERANIA TRAJEKTORII..\n\n";
 
-	stats += "\nZapis:\n";
-	stats += "Film1: " + (file1.isEmpty() ? "(brak)" : file1)+"\n\n";
-	stats += "Film2: " + (file2.isEmpty() ? "(brak)" : file2)+"\n\n";
-	stats += "Kalibracja: " + (calibration.isEmpty() ? "(brak)" : calibration)+"\n\n";
-	stats += "Trajektoria: " + (trajectory.isEmpty() ? "(brak)" : trajectory)+"\n\n";
+	stats += "Przetwarzanie: \t" + QString::number(timeProcess) + "s\n";
+	stats += "Klatki przetworzone: \t" + QString::number(framesProcess) + "\n";
+	stats += "Poprawnie przetworzone: \t" + QString::number(framesProper) +"\n";
+	stats += "Procent poprawny: \t" + QString::number(framesProper*100/framesProcess) +"%\n\n";
+
+	stats += "Segmentacja dloni (avg): \t" + QString::number(timeSkin) + "ms\n";
+	stats += "Stereo dopasowanie (avg): \t" + QString::number(timeStereo) + "ms\n\n";
+
+	stats += "..ZAPIS..\n\n";
+	stats += "Film1: " + (file1.isEmpty() ? "(brak)" : file1.mid(file1.lastIndexOf("/")+1))+"\n";
+	stats += "Film2: " + (file2.isEmpty() ? "(brak)" : file2.mid(file2.lastIndexOf("/")+1))+"\n";
+	stats += "Kalibracja: " + (calibration.isEmpty() ? "(brak)" : calibration.mid(calibration.lastIndexOf("/")+1))+"\n";
+	stats += "Trajektoria: " + (trajectory.isEmpty() ? "(brak)" : trajectory.mid(trajectory.lastIndexOf("/")+1))+"\n";
+	stats += "Probki skory: " + (img1.isEmpty() ? "(brak)" : img1.mid(img1.lastIndexOf("/")+1))+" "+(img2.isEmpty() ? "(brak)" : img2.mid(img2.lastIndexOf("/")+1))+"\n";
 
 	ui.statLabel->setText(stats);
 }

@@ -19,15 +19,22 @@ public:
 	QString getFileName();
 
 	int fps;
-	int bps;
-	int allBits;
-	int allFrames;
 	int timeS;
+
+	double timeProcess;
+	int framesProcess;
+	int framesProper;
+
+	double timeSkin;
+	double timeStereo;
 
 	QString file1;
 	QString file2;
 	QString calibration;
 	QString trajectory;
+	QString img1;
+	QString img2;
+
 
 private:
 	Ui::StatisticsDialog ui;

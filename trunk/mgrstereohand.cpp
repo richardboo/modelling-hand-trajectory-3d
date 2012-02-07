@@ -10,6 +10,7 @@ MgrStereoHand::MgrStereoHand(QWidget *parent, Qt::WFlags flags)	: QMainWindow(pa
 {
 	ui.setupUi(this);
 	initUI();
+	setWindowFlags(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
 }
 
 MgrStereoHand::~MgrStereoHand(){
@@ -53,7 +54,7 @@ bool MgrStereoHand::init(){
 	connect(process, SIGNAL(startedProcess()), this, SLOT(startedProcess()));
 	connect(process, SIGNAL(finishedProcess()), this, SLOT(finishedProcess()));
 	connect(process, SIGNAL(calibrationNotSet()), this, SLOT(calibrationNotSet()));
-	connect(process, SIGNAL(showOverlay(QString,time)), this, SLOT(showOverlay(QString,time)));
+	connect(process, SIGNAL(showOverlay(QString,int)), this, SLOT(showOverlay(QString,int)));
 	
 	realProcessingThead->start();
 

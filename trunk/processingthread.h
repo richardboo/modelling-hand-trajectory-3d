@@ -131,8 +131,6 @@ private:
 	// zmienne pomocnicze przetwarzania
 	CvRect rect;
 	// typ przetwarzania video/camera
-	// UWAGA!
-	// polaczyc to z gui
 	int processType;
 	int stateHist;
 	int stateBack;
@@ -147,16 +145,42 @@ private:
 	bool lastStart[2];
 
 
+	//////////////// STATYSTYKI ///////////////
 	// fps
 	// liczenie klatek itd
 	long framesCounter;
-	int bps;
-	long allBits;
 
+	bool duringRecognition;
+
+	// rozpoczecie 
 	time_t startTime;
+	// zakonczenie 
 	time_t endTime;
-	time_t beginActionTime;
-	time_t endActionTime;
+
+	// czas rozpoczecia i zakonczenia przetwarzania
+	time_t startProcessTime;
+	time_t endProcessTime;
+
+	// czas: rektyfikacja, wykrywania skory, dopasowanie stereo
+	double skinTime;
+	int counterSkin;
+	double stereoTime;
+
+	// zmienne pomocnicze do liczenia czasu
+	time_t tempStart;
+	time_t tempEnd;
+
+	// ilosc wszystkich klatek od rozpoczecia pobierania trajektorii do zakonczenia
+	int framesStartStopCounter;
+	// ilosc wszystkich klatek, w ktorych pobrana byla trajektoria
+	int framesProcessingCounter;
+
+	// obraz dloni przy rozpoczeciu i zakonczeniu rozpoznawania
+	IplImage * imageHand[2];
+	// za ile klatek rozostanie pobrana dlon
+	int counterTillHandGet;
+
+
 
 	float lastUpdate;
 	float fpsUpdateInterval;
@@ -168,12 +192,6 @@ private:
 	void initGameTime();
 	void updateFPS();
 	
-	float avgRectifyTime;
-	float avgFindSkinTime;
-	float avgFindHandTime;
-	float avgStereoTime;
-
-
 	// bufory do nagrywania
 	std::vector<IplImage *> buffer[2];
 
