@@ -42,7 +42,7 @@ public:
 		m_remap1, m_remap2, m_remapped1, m_remapped2;
 
 //GPU
-	/*	
+	/*
 	gpu::StereoBM_GPU bm;
 	gpu::StereoConstantSpaceBP csbp;
 
@@ -50,6 +50,6 @@ public:
 	gpu::GpuMat d_left, d_right;
 	
 	gpu::GpuMat d_remap1, d_remap2, d_remapped1, d_remapped2;
-*/
+	*/
 
 };

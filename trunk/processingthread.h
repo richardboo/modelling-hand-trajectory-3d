@@ -73,8 +73,8 @@ signals:
 	void getFilmFileName();
 
 private:
-	void mainLoop();
-	void mainIdleLoop();
+	bool mainLoop();
+	bool mainIdleLoop();
 
 	bool initCameras();
 	void initModules();

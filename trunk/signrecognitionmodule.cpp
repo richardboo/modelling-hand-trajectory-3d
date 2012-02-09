@@ -90,11 +90,12 @@ bool SignRecognitionModule::isSign(IplImage * bwImage, CvRect & rect){
 	double diff = cvMahalanobis((const CvArr*)features, (const CvArr*)meanVect, (const CvArr*)invCov);
 
 	//cvShowImage("reka", bwImage);
-	qDebug() << diff;
+	// qDebug() << diff;
 
 	cvReleaseMat(&features);
 	cvReleaseImage(&contour);
 	cvResetImageROI(bwImage);
 
-	return (diff <= 8.0);
+	//return (diff <= 8.0);
+	return false;
 }
