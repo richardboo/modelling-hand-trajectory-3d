@@ -113,10 +113,25 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		*/
 	}
 	else if(type == BM_){
-		BMState.roi1 = hands[0]->lastRect;
-		BMState.roi2 = hands[1]->lastRect;
-		cvFindStereoCorrespondenceBM( rectifiedGray[0], rectifiedGray[1], disparityNotNormalized, &BMState);
+		//BMState.roi1 = hands[0]->lastRect;
+		//BMState.roi2 = hands[1]->lastRect;
+		//qDebug() << BMState.preFilterCap;
+		//rectifiedGray[0] = cvLoadImage("scene1.row3.col3.ppm", CV_LOAD_IMAGE_GRAYSCALE);
+		//rectifiedGray[1] = cvLoadImage("scene1.row3.col5.ppm", CV_LOAD_IMAGE_GRAYSCALE);
+
+
+		cvFindStereoCorrespondenceBM( rectifiedGray[1], rectifiedGray[0], disparityNotNormalized, &BMState);
+		//cvCopyImage(disparityNotNormalized, andImage);
 		cvNormalize( disparityNotNormalized, andImage, 0, 256, CV_MINMAX );
+		//cvCopy(andImage, disparity);
+		
+		CvScalar s = cvAvg(disparityNotNormalized, blobs[1]);
+		cvZero(disparity);
+		cvCopy(andImage, disparity, blobs[1]);
+		hands[0]->setLastPointWithZ(s.val[0]);
+		hands[1]->setLastPointWithZ(s.val[0]);
+		
+		return RESULT_OK;
 	}
 	else if(type == SGBM_){
 		
@@ -125,28 +140,39 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		andImage = &IplImage(disp);
 	}
 
+	
+	return RESULT_OK;
+
 	cvZero(disparity);
+
+	//IplImage * temp = cvCreateImage(Settings::instance()->defSize, 8, 1);
+	//cvZero(temp);
 
 	cvSetImageROI(disparity, hands[0]->lastRect);
 	cvSetImageROI(blobs[0], hands[0]->lastRect);
 	cvSetImageROI(andImage, hands[0]->lastRect);
+	//cvSetImageROI(temp, hands[0]->lastRect);
+
+	//cvThreshold(andImage, temp, 1, 255, CV_THRESH_BINARY);
 
 	CvScalar avg = cvAvg(andImage, blobs[0]);
-	int diff = avg.val[0]*4;
-	if(diff > 255)	diff = 255;
+	int diff = avg.val[0];
+	/*if(diff > 255)	diff = 255;
 
 	if(hands[0]->lastZ != -1){
 		diff = (3*diff + 7*hands[0]->lastZ)/10;
-	}
+	}*/
 	avg = cvScalarAll(diff);
 	
 	cvSet(disparity, avg, blobs[0]);
 
+	//cvResetImageROI(temp);
 	cvResetImageROI(blobs[0]);
 	cvResetImageROI(andImage);
 	cvResetImageROI(disparity);
 
 	//imshow("d", disparity);
+	//cvCopyImage(andImage, disparity);
 
 	hands[0]->setLastPointWithZ(avg.val[0]);
 	hands[1]->setLastPointWithZ(avg.val[0]);
@@ -191,9 +217,9 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 
 		cvResetImageROI(andImage);
 		
-
-		int diff = hands[0]->lastRect.x+xplus - hands[1]->lastRect.x + 64;
-	
+		int diff = (hands[0]->lastRect.x - hands[1]->lastRect.x);
+		//int diff = abs(hands[0]->lastRect.x+xplus - hands[1]->lastRect.x);
+	/*
 		// 128 - najwieksze disparity
 		diff *= 2;
 		if(diff > 255)	diff = 255;
@@ -201,7 +227,9 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		if(hands[0]->lastZ != -1){
 			diff = (3*diff + 7*hands[0]->lastZ)/10;
 		}
+	*/
 
+		diff += 64;
 		cvZero(disparity);
 
 		cvSetImageROI(disparity, hands[0]->lastRect);
@@ -215,11 +243,8 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 	}
 	else if(type == MINE_BM_){
 
-		cvZero(andImage);
-
 		BwImage rawDispImage(andImage);
-		BwImage left(rectifiedGray[0]);
-		BwImage right(rectifiedGray[1]);
+		cvZero(andImage);
 
 		// 1. grey equalize
 		CvScalar avg[2];
@@ -229,14 +254,31 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		// roznica koloru
 		int diffAvg = avg[0].val[0]-avg[1].val[0];
 
+		qDebug() << "diff: " << diffAvg;
+
 		// wyrownanie roznic srednich kolorow
 		cvAddS(rectifiedGray[1], cvScalar(diffAvg, 0, 0), rectifiedGray[1], blobs[1]);
+
+
+		IplImage * handGray[2];
+		handGray[0] = cvCreateImage(Settings::instance()->defSize, 8, 1);
+		handGray[1] = cvCreateImage(Settings::instance()->defSize, 8, 1);
+
+		cvZero(handGray[0]);
+		cvZero(handGray[1]);
+
+		cvCopy(rectifiedGray[0], handGray[0], blobs[0]);
+		cvCopy(rectifiedGray[1], handGray[1], blobs[1]);
+
+		BwImage left(handGray[0]);
+		BwImage right(handGray[1]);
 
 		int indexToSearch = 0, indexOther = 1;
 		int halfDisp = myHandBMState.numberOfDisparities/2;
 		int currMin = 300;
 		int currVal = 0;
-		int realDiffBetween = hands[0]->lastRect.x-hands[1]->lastRect.x;
+		int realDiffBetween = hands[1]->lastRect.x-hands[0]->lastRect.x;
+
 
 		// po calej wysokosci obrazka
 		for(int y = hands[indexToSearch]->lastRect.y; 
@@ -249,38 +291,43 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 				if(left[y][x] == 0)
 					continue;
 
-				currMin = 300;
+				currMin = 100;
+				//int minI = 0;
 
 				// po mozliwych nrOfDisp
-				for(int i = -halfDisp; i < halfDisp && x+i < 640; ++i){
+				rawDispImage[y][x] = 0;
+				for(int i = -halfDisp; (i < halfDisp) && (x+i+realDiffBetween < 640); ++i){
 					
-					currVal = abs(left[y][x]-right[y][x+i]);
+					if(right[y][x+i+realDiffBetween] == 0)
+						continue;
+
+					currVal = abs(left[y][x]-right[y][x+i+realDiffBetween]);
 					if(currVal < currMin){
 						currMin = currVal;
-						rawDispImage[y][x] = i;
+						rawDispImage[y][x] = i+realDiffBetween;
+						//minI = i;
 					}
-
 				}
 			}
 		}
+		/*
 		cvAddS(andImage, cvScalar(halfDisp+realDiffBetween,0,0), andImage, blobs[0]);
+		*/
 		cvSmooth(andImage, andImage, CV_MEDIAN, 3);
-
-		cvCopyImage(andImage, disparity);
-		return;
-		
+	
 		cvSetImageROI(disparity, hands[0]->lastRect);
 		cvSetImageROI(blobs[0], hands[0]->lastRect);
 		cvSetImageROI(andImage, hands[0]->lastRect);
 
-		CvScalar avgD = cvAvg(andImage, blobs[0]);
-		int diff = avgD.val[0]*4;
+		CvScalar avgD = cvAvg(andImage, andImage);
+		/*int diff = avgD.val[0]*4;
 		if(diff > 255)	diff = 255;
 
 		if(hands[0]->lastZ != -1){
 			diff = (3*diff + 7*hands[0]->lastZ)/10;
 		}
 		avgD = cvScalarAll(diff);
+		*/
 		
 		cvSet(disparity, avgD, blobs[0]);
 
@@ -289,8 +336,8 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		cvResetImageROI(disparity);
 
 		// pokazmy sobie ta mape
-		cvZero(rectifiedGray[0]);
-		cvCopyImage(andImage, rectifiedGray[0]);
+		//cvZero(rectifiedGray[0]);
+		//cvCopyImage(andImage, rectifiedGray[0]);
 
 		hands[0]->setLastPointWithZ(avgD.val[0]);
 		hands[1]->setLastPointWithZ(avgD.val[0]);

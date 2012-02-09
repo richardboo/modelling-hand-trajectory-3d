@@ -41,7 +41,7 @@ public:
     //CvMat *mx1,*my1,*mx2,*my2;
 
 	CvMat *mx[2],*my[2];
-	CvMat mQ;
+	CvMat *mQ;
 
 	IplImage * imageWithCorners;
 	vector<IplImage *> leftImages;

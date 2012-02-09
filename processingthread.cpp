@@ -32,8 +32,8 @@ static int segmantationAlg;
 static int stereoAlg;
 
 float ALPHA_BG = 0.07f;
-int BG_UPDATE_FRAMES = 35;
-int BKG_THRESH = 15;
+int BG_UPDATE_FRAMES = 20;
+int BKG_THRESH = 30;
 int FRAMES_TILL_HAND = 15;
 
 
@@ -139,10 +139,11 @@ void ProcessingThread::process(){
             break;
         }
         stopMutex.unlock();
+		bool isok = true;
         /////////////////////////////////
 		try{
 		if(prevNothing){
-			mainIdleLoop();
+			isok = mainIdleLoop();
 			// moze juz koniec idle?
 			bool not2 = getNothing();
 			if(!not2){
@@ -170,12 +171,13 @@ void ProcessingThread::process(){
 		}catch(Exception ex){
 			
 		}
-		//Sleep(100);
+		if(!isok)
+			Sleep(50);
 	}
 	emit finished();
 }
 
-void ProcessingThread::mainLoop(){
+bool ProcessingThread::mainLoop(){
 
 	for(int i = 0; i < 2; ++i){
 		if(!frameGrabber[i]->hasNextFrame()){
@@ -184,7 +186,7 @@ void ProcessingThread::mainLoop(){
 			if(processType == VIDEO){
 				makeEverythingStop();
 			}
-			return;
+			return false;
 		}
 		frame[i] = frameGrabber[i]->getNextFrame();
 	}
@@ -212,6 +214,7 @@ void ProcessingThread::mainLoop(){
 			//qDebug() << "Hello from thread " << omp_get_thread_num();
 			calibModule->rectifyImage(frame[i], frameRectified[i], i);
 			cvCopyImage(frame[i], frameShow[i]);
+			cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 		}
 
 //////////////// STAT ///////////////////////////
@@ -219,11 +222,15 @@ void ProcessingThread::mainLoop(){
 		if(counterTillHandGet == 0){
 			cvCopyImage(frame[0], imageHand[0]);
 			cvCopyImage(frame[1], imageHand[1]);
-			emit showOverlay("Pobrana probka dloni", 1000);
+			emit showOverlay("Pobrana probka dloni, trwa inicjalizacja", 3000);
+		}
+		else if(counterTillHandGet > 0){
+			return true;
 		}
 /////////////////////////////////////////////////
 
 		if((segmantationAlg == HIST_ || segmantationAlg == ALL_) && stateHist != STATE_AFTER_HIST){
+			
 			for(int i = 0; i < 2; ++i){
 				
 				// pobieranie histogramu skory
@@ -238,7 +245,7 @@ void ProcessingThread::mainLoop(){
 				drawingModule->drawSamplesOnFrame(skinDetection[i]->getSampleCount(), frameShow[i]);
 
 				// jak juz jest wystarczajaco duzo probek - koniec
-				if(	skinDetection[i]->getSampleCount() >= 20){
+				if(	skinDetection[i]->getSampleCount() >= 10){
 					skinDetection[i]->skinFound = true;
 
 					// ustawienie wskaznika na twarz, aby mozna bylo znalezc dlon
@@ -256,7 +263,6 @@ void ProcessingThread::mainLoop(){
 			if(stateBack == STATE_BEFORE_BACK){
 				for(int i = 0; i < 2; ++i){
 					
-					cvCvtColor(frameRectified[i], frameGray[i], CV_BGR2GRAY);
 					cvAddWeighted(frameGray[i], ALPHA_BG, frameBackground[i], (1.0-ALPHA_BG), 0.0, frameBackground[i]);
 					if(faceDetection[i]->lastFound.x == -1){
 						faceDetection[i]->findHeadHaar(frameRectified[i], head[i]);
@@ -333,20 +339,21 @@ void ProcessingThread::mainLoop(){
 			Settings::instance()->changeTrajectory = false;
 		}
 
-		qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
+		//qDebug() << "i: " << startRecognized[0] << " " << startRecognized[1];
 
 //////////////// STAT ///////////////////////////
 		if(duringRecognition){
 			framesStartStopCounter++;
 		}
 /////////////////////////////////////////////////
-		
+		//stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
+		//cvResize(disparity, disparitySmaller);
+
 		if(!handNotFound[0] && !handNotFound[1] && (startRecognized[0] == 2)){
 
-			emit showOverlay( "START RECOGNIZED", 1000);
-			
 //////////////// STAT ///////////////////////////
 			if(!duringRecognition){
+				emit showOverlay( "START RECOGNIZED", 1000);			
 				duringRecognition = true;
 				time(&startProcessTime);
 			}
@@ -364,8 +371,11 @@ void ProcessingThread::mainLoop(){
 			stereoTime += difftime(tempEnd, tempStart);
 /////////////////////////////////////////////////
 
-			cvResize(disparity, disparitySmaller, CV_INTER_NN);
-			drawingModule->drawDispOnFrame(hand[0]->lastZ, disparitySmaller, disparityToShow);
+			calibModule->setRealCoordinates(hand);
+			cvResize(disparity, disparitySmaller);
+			//STEREO
+			drawingModule->drawDispOnFrame(hand[0]->lastDisp, disparitySmaller, disparityToShow);
+			
 
 		}else{
 			hand[0]->setLastPointWithZ(-1);
@@ -413,7 +423,7 @@ void ProcessingThread::mainLoop(){
 				setNothing(true);
 			}
 			else{
-				return;
+				return true;
 			}
 		}
 		cvCopyImage(frame[0], frameShow[0]);
@@ -424,14 +434,16 @@ void ProcessingThread::mainLoop(){
 	//cvCopyImage(frame[1], frameShow[1]);
 
 	emit showImages();
+	return true;
 }
 
-void ProcessingThread::mainIdleLoop(){
+bool ProcessingThread::mainIdleLoop(){
+	bool ret = true;
 	if(frameGrabber[0] != NULL && frameGrabber[1] != NULL){
 
 		for(int i = 0; i < 2; ++i){
 			if(!frameGrabber[i]->hasNextFrame()){
-				return;
+				return false;
 			}
 			frame[i] = frameGrabber[i]->getNextFrame();
 		}
@@ -446,10 +458,12 @@ void ProcessingThread::mainIdleLoop(){
 		//cvCopyImage(blackImage, disparitySmaller);
 		cvCopyImage(blackImage, trajectorySmaller);
 		cvCopyImage(blackImage, disparitySmaller);
+		ret = false;
 	}
 	framesCounter++;
 	updateFPS();
 	emit showImages();
+	return ret;
 }
 
 
@@ -617,8 +631,8 @@ void ProcessingThread::makeEverythingStop(){
 	if(cal){
 		setCalibration(false);
 		// plik nie zapisany
-		//emit calibrationNotSet();
-		//Settings::instance()->fileCalib = "";
+		emit calibrationNotSet();
+		Settings::instance()->fileCalib = "";
 	}
 
 	if(processType == VIDEO){

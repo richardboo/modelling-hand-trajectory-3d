@@ -239,7 +239,8 @@ void MgrStereoHand::showImages(){
 	//cvResize(fs->trajectory, fs->trajectorySmaller, CV_INTER_NN);
 	//cvResize(fs->disparityToShow, fs->disparitySmaller, CV_INTER_NN);
 	trajectoryWindow->showImage(fs->trajectorySmaller);
-	disparityWindow->showImage(fs->disparityToShow);
+	//STEREO
+	disparityWindow->showImage(fs->disparitySmaller);
 }
 
 void MgrStereoHand::loadFilmClicked0(){

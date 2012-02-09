@@ -2,7 +2,7 @@
 
 MyHandBM::MyHandBM(void){
 	SADWindowSize = 5;
-	numberOfDisparities = 8;
+	numberOfDisparities = 40;
 }
 
 MyHandBM::~MyHandBM(void)

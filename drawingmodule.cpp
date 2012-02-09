@@ -18,7 +18,7 @@ void DrawingModule::drawTextOnFrame(char * text, IplImage * frame){
 }
 
 void DrawingModule::drawDispOnFrame(int disp, IplImage * dispIm, IplImage * dispToShow){
-
+/*
 	cvZero(dispToShow);
 
 	int red, green;
@@ -33,9 +33,9 @@ void DrawingModule::drawDispOnFrame(int disp, IplImage * dispIm, IplImage * disp
 	}
 
 	cvSet(dispToShow, cvScalar(0, green, red), dispIm);
-
+*/
 	sprintf(strInt, "odleglosc: %d", disp);
-	cvPutText(dispToShow, strInt, cvPoint(30, 30), &font, cvScalar(0, 0, 200));
+	cvPutText(dispIm, strInt, cvPoint(30, 30), &font, cvScalar(255, 255, 255));
 }
 
 void DrawingModule::drawRectOnFrame(CvRect & rect, IplImage * frame){
