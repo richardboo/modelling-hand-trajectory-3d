@@ -22,7 +22,7 @@ Blob::Blob(void): id(idCounter){
 	minArea = 3000;
 	maxArea = 50000;
 
-	mask = cvCreateImage(Settings::instance()->imageSize, 8, 1);
+	mask = cvCreateImage(Settings::instance()->defSize, 8, 1);
 	cvZero(mask);
 
 	radius = -1;

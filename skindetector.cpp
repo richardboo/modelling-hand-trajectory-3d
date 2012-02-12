@@ -33,7 +33,7 @@ SkinDetector::~SkinDetector(void)
 void SkinDetector::updateHistogram(IplImage * frame, CvRect & rect){
 
 	framesCounter++;
-
+/*
 	cvSetImageROI(frame, rect);
 	cvSetImageROI(temp, rect);
 	cvSetImageROI(maskTemp, rect);
@@ -74,16 +74,21 @@ void SkinDetector::updateHistogram(IplImage * frame, CvRect & rect){
 	cvResetImageROI(temp);
 	cvResetImageROI(maskTemp);
 	cvResetImageROI(skinMask);
+*/
 
-	skinHistogram.update(temp, rect);
+	//cvSetImageROI(frame, rect);
+	//cvSetImageROI(temp, rect);
+	cvCopy(frame, temp);
+
+	skinHistogram.update(frame, rect);
 
 	// troche jasniejsze
-	cvAddS(temp, cvScalarAll(10), temp);
-	skinHistogram.update(temp, rect);
+	//cvAddS(temp, cvScalarAll(10), temp);
+	//skinHistogram.update(temp, rect);
 
 	// troche ciemniejsze
-	cvSubS(temp, cvScalarAll(10), temp);
-	skinHistogram.update(temp, rect);
+	//cvSubS(temp, cvScalarAll(20), temp);
+	//skinHistogram.update(temp, rect);
 }
 
 void SkinDetector::detectSkin(IplImage * frame, IplImage * skin, CvRect & rect, int type, IplImage * fg){
@@ -198,8 +203,8 @@ void SkinDetector::detectSkinHist(IplImage * frame, IplImage * skin, CvRect & re
 	
 	cvThreshold(skinHistogram.back, skin, 30, 255, CV_THRESH_BINARY);
 
-	cvDilate(skin, skin);
 	cvErode(skin, skin);
+	cvDilate(skin, skin);
 
 	cvResetImageROI(skin);
 	cvResetImageROI(skinHistogram.back);

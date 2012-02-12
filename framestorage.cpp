@@ -22,6 +22,8 @@ FrameStorage::FrameStorage(void)
 	trajectory = NULL;
 	trajectorySmaller = NULL;
 
+
+
 }
 
 FrameStorage::~FrameStorage(void){
