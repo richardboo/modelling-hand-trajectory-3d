@@ -22,16 +22,6 @@ Settings::~Settings(void)
 {
 }
 
-void Settings::setSize(int id){
-	if(id == 0){
-		size = QSize(320, 240);
-		imageSize = cvSize(320, 240);
-	}else{
-		size = QSize(640, 480);
-		imageSize = cvSize(640,480);
-	}
-}
-
 
 void Settings::initImageType(int current){
 	imageTypes << "Obraz z kamery"<<"Skalibrowany obraz" << "Wykrywanie skory" << "Znaleziona dlon";
@@ -42,9 +32,6 @@ QString Settings::getImageTypeString(){
 	return imageTypes.at(imageType);
 }
 
-void Settings::initSize(int current){
-	setSize(current);
-}
 
 void Settings::initSegmentation(QStringList list, int current){
 	segmantations = list;

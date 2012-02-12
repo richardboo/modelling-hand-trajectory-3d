@@ -67,8 +67,6 @@ public:
 	// gettery
 	int imageType;
 
-	QSize & getSize()		{ return size; }
-
 	int getImageWidth()		{ return size.width(); }
 	int getImageHeight()	{ return size.height(); }
 
@@ -77,7 +75,6 @@ public:
 
 	// settery
 	void setImageType(int newOne)		{ imageType = newOne; }
-	void setSize(int id);
 
 	void setSegmantationAlg(int newOne)	{ segmantationAlg = newOne; }
 	void setStereoAlg(int newOne)		{ stereoAlg = newOne;}
@@ -85,7 +82,6 @@ public:
 	void setBkg(int newOne)				{ bkg = newOne; }
 
 	void initImageType(int current);
-	void initSize(int current);
 	void initSegmentation(QStringList list, int current);
 	void initLight(QStringList list, int current);
 	void initBkg(QStringList list, int current);
@@ -98,7 +94,7 @@ public:
 	QString getSegmantationString();
 	QString getStereoString();
 
-	CvSize imageSize;
+	//CvSize imageSize;
 
 	QDir lastLoadCalibDir;
 	QDir lastLoadDir;

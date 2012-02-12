@@ -32,13 +32,15 @@ static int segmantationAlg;
 static int stereoAlg;
 
 float ALPHA_BG = 0.07f;
-int BG_UPDATE_FRAMES = 20;
+int BG_UPDATE_FRAMES = 10;
 int BKG_THRESH = 30;
 
 
 ProcessingThread::ProcessingThread(QObject *parent)
 	: QObject(parent)
 {
+	
+
 	currentBgFrames = 0;
 
 	srModule = new SignRecognitionModule("A.xml");
@@ -100,6 +102,7 @@ ProcessingThread::~ProcessingThread(){
 void ProcessingThread::init(FrameStorage * f, CalibrationModule * calibMod, CalibrationDialog * dial,
 				StatisticsDialog * statDial){
 
+	Settings::instance()->defSize = cvSize(640, 480);
 	fs = f;
 	calibModule = calibMod;
 	calibDialog = dial;
@@ -159,7 +162,7 @@ void ProcessingThread::process(){
 				makeEverythingStop();
 			}
 			if(processType == VIDEO)
-				Sleep(100);
+				Sleep(50);
 		}
 		}catch(Exception ex){
 			
@@ -265,17 +268,21 @@ bool ProcessingThread::mainLoop(){
 				currentBgFrames++;
 
 				// wylaczamy dopiero jak chociaz raz byla rozpoznana twarz
-				if(currentBgFrames >= BG_UPDATE_FRAMES && 
-					faceDetection[0]->lastFound.x > -1 &&
-					faceDetection[1]->lastFound.x > -1){
+				if(currentBgFrames >= BG_UPDATE_FRAMES  
+					/*faceDetection[0]->lastFound.x > -1 &&
+					faceDetection[1]->lastFound.x > -1*/){
 
 					stateBack = STATE_AFTER_BACK;
-					cvSetImageROI(frameBackground[0], faceDetection[0]->lastFound);
-					cvSetImageROI(frameBackground[1], faceDetection[1]->lastFound);
-					cvSet(frameBackground[0], cvScalarAll(0));
-					cvSet(frameBackground[1], cvScalarAll(0));
-					cvResetImageROI(frameBackground[0]);
-					cvResetImageROI(frameBackground[1]);
+
+					if(faceDetection[0]->lastFound.x != -1 && faceDetection[1]->lastFound.x != -1){
+
+						cvSetImageROI(frameBackground[0], faceDetection[0]->lastFound);
+						cvSetImageROI(frameBackground[1], faceDetection[1]->lastFound);
+						cvSet(frameBackground[0], cvScalarAll(0));
+						cvSet(frameBackground[1], cvScalarAll(0));
+						cvResetImageROI(frameBackground[0]);
+						cvResetImageROI(frameBackground[1]);
+					}
 				}
 			}
 			else{
@@ -985,6 +992,8 @@ bool ProcessingThread::reinitModules(){
 		delete stereoModule;
 		stereoModule = NULL;
 	}
+
+	Settings::instance()->defSize = cvSize(640, 480);
 
 	for(int i = 0; i < 2; ++i){
 		// usuwanie tla

@@ -2,7 +2,7 @@
 #include "settings.h"
 
 BGMask::BGMask(void){
-	foregroundSmaller = cvCreateImage(Settings::instance()->imageSize, 8, 1);
+	foregroundSmaller = cvCreateImage(Settings::instance()->defSmallSize, 8, 1);
 }
 
 BGMask::~BGMask(void){
