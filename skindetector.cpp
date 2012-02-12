@@ -127,7 +127,7 @@ void SkinDetector::detectSkinRGB(IplImage * frame, IplImage * skin, CvRect & rec
 	}
 
 	cvDilate(skin, skin);
-	cvDilate(skin, skin);
+	//cvDilate(skin, skin);
 }
 
 void SkinDetector::detectSkinHSV(IplImage * frame, IplImage * skin, CvRect & rect){
@@ -156,6 +156,35 @@ void SkinDetector::detectSkinHSV(IplImage * frame, IplImage * skin, CvRect & rec
 	}
 	cvDilate(skin, skin);
 	
+	//cvDilate(skin, skin);
+}
+
+void SkinDetector::detectSkinYCRCB(IplImage * frame, IplImage * skin, CvRect & rect){
+	
+	cvZero(skin);
+
+	cvCvtColor(frame, temp, CV_BGR2YCrCb);
+
+	YCrCbImage ycrcb(temp);
+	BwImage skin_img(skin);
+
+	YCrCbPixel pix;
+	
+	for(int i = rect.y; i < rect.y+rect.height; ++i){
+		for(int j = rect.x; j < rect.x+rect.width; ++j){
+
+				pix = ycrcb[i][j];
+				
+				if(	pix.cr <= 173 &&
+					pix.cr >= 133 &&
+					pix.cb >= 77 &&
+					pix.cb >= 127 
+					){
+					skin_img[i][j] = 255;
+			}
+		}
+	}
+
 	cvDilate(skin, skin);
 }
 
