@@ -19,14 +19,14 @@ SGBMDialog::~SGBMDialog()
 void SGBMDialog::accept(){
 	// tu sprawdzenie ktory jest wybrany
 
-	StereoModule::sgbm.SADWindowSize = ui.sadBox->value();
-	StereoModule::sgbm.minDisparity = ui.minDispBox->value();
-	StereoModule::sgbm.preFilterCap = ui.preCapBox->value();
-	StereoModule::sgbm.numberOfDisparities = ui.dispBox->value();
-	StereoModule::sgbm.speckleWindowSize = ui.speckleSizeBox->value();
-	StereoModule::sgbm.speckleRange = ui.speckleBox->value();
-	StereoModule::sgbm.uniquenessRatio = ui.uniqueBox->value();
-	StereoModule::sgbm.disp12MaxDiff = ui.maxDiffBox->value();
+	StereoModule::sgbm.SADWindowSize		= ui.sadBox->value();
+	StereoModule::sgbm.minDisparity			= ui.minDispBox->value();
+	StereoModule::sgbm.preFilterCap			= ui.preCapBox->value();
+	StereoModule::sgbm.numberOfDisparities	= ui.dispBox->value();
+	StereoModule::sgbm.speckleWindowSize	= ui.speckleSizeBox->value();
+	StereoModule::sgbm.speckleRange			= ui.speckleBox->value();
+	StereoModule::sgbm.uniquenessRatio		= ui.uniqueBox->value();
+	StereoModule::sgbm.disp12MaxDiff		= ui.maxDiffBox->value();
 
 	QDialog::accept();
 }

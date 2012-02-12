@@ -11,6 +11,8 @@
 #include "settings.h"
 #include "sgbmdialog.h"
 #include "bmdialog.h"
+#include "fastdialog.h"
+#include "pixeldialog.h"
 
 class AlgorithmsDialog : public QDialog
 {
@@ -29,6 +31,8 @@ private:
 	SGBMDialog * sgbmDialog;
 	BMDialog * bmDialog;
 	BMDialog * cudaDialog;
+	FastDialog * fastDialog;
+	PixelDialog * pixelDialog;
 
 	QButtonGroup * stereoGroup;
 	QButtonGroup * segmGroup;
@@ -43,6 +47,8 @@ private slots:
 	void showBMParamsClicked();
 	void showSGBMParamsClicked();
 	void showCUDAParamsClicked();
+	void showPixelParamsClicked();
+	void showfastParamsClicked();
 
 	void startStopTrajectoryClicked();
 

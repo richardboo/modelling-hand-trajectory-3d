@@ -10,6 +10,7 @@ StereoVar StereoModule::vars;
 CvStereoBMState StereoModule::BMState;
 CvStereoBMState StereoModule::BMStateCuda;
 MyHandBM StereoModule::myHandBMState;
+FastStereoState StereoModule::fastState;
 
 
 StereoModule::StereoModule(void){
@@ -95,8 +96,9 @@ void StereoModule::stereoStart(CvSize & size){
 	if(matcher_popcount != NULL)
 		delete matcher_popcount;
 
-	detector = new FastFeatureDetector(30);
-	extractor = new BriefDescriptorExtractor(32);
+	detector = new FastFeatureDetector(fastState.featuresTheshold);
+	extractor = new BriefDescriptorExtractor(fastState.featuresNr);
+
 	matcher_popcount= new BruteForceMatcher<Hamming>;
 
 	disparityNotNormalized = cvCreateImage(size, IPL_DEPTH_16S, 1);
@@ -148,17 +150,19 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		return RESULT_OK;
 	}
 	else if(type == BM_){
-		//BMState.roi1 = hands[0]->lastRect;
-		//BMState.roi2 = hands[1]->lastRect;
+		BMState.roi1 = hands[0]->lastRect;
+		BMState.roi2 = hands[1]->lastRect;
 		//qDebug() << BMState.preFilterCap;
 		//rectifiedGray[0] = cvLoadImage("scene1.row3.col3.ppm", CV_LOAD_IMAGE_GRAYSCALE);
 		//rectifiedGray[1] = cvLoadImage("scene1.row3.col5.ppm", CV_LOAD_IMAGE_GRAYSCALE);
 
-
+		cvZero(disparityNotNormalized);
 		cvFindStereoCorrespondenceBM( rectifiedGray[1], rectifiedGray[0], disparityNotNormalized, &BMState);
+
 		//cvCopyImage(disparityNotNormalized, andImage);
 		cvNormalize( disparityNotNormalized, andImage, 0, 256, CV_MINMAX );
 		//cvCopy(andImage, disparity);
+
 		
 		CvScalar s = cvAvg(disparityNotNormalized, blobs[1]);
 		cvZero(disparity);
@@ -345,7 +349,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		/*
 		cvAddS(andImage, cvScalar(halfDisp+realDiffBetween,0,0), andImage, blobs[0]);
 		*/
-		cvSmooth(andImage, andImage, CV_MEDIAN, 3);
+		cvSmooth(andImage, andImage, CV_MEDIAN, myHandBMState.medianSmooth);
 	
 		cvSetImageROI(disparity, hands[0]->lastRect);
 		cvSetImageROI(blobs[0], hands[0]->lastRect);

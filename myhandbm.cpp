@@ -1,7 +1,7 @@
 #include "myhandbm.h"
 
 MyHandBM::MyHandBM(void){
-	SADWindowSize = 5;
+	medianSmooth = 3;
 	numberOfDisparities = 40;
 }
 

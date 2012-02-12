@@ -17,6 +17,7 @@
 #include "processingthread.h"
 #include "framestorage.h"
 
+
 #include "calibrationmodule.h"
 
 #define STATE_BEFORE_HIST 0
@@ -49,7 +50,6 @@ public slots:
 private:
 	Ui::MgrStereoHandClass ui;
 
-	QButtonGroup * sizeGroup;
 	QButtonGroup * processGroup;
 
 	// dialogi
@@ -93,7 +93,6 @@ private slots:
 	void processTypeChanged(int id);
 
 	void changeShowImage(int value);
-	void sizeButtonClicked(int id);
 	void calibrateButtonClicked();
 
 	void exit();

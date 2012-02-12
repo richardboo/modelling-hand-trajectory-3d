@@ -157,8 +157,9 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 						continue;
 
 					// dotyka gory
-					if(component.rect.y == 0)
+					if(component.rect.y < 10)
 						continue;
+
 
 					//qDebug() << "x" << component.rect.x;
 
@@ -193,9 +194,11 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 					
 					}
 					else{
-						// pewnie dlon
+						// pewnie dlon, juz jest jakas mozliwosc
+						// berzey ten bardziej po lewej, ale nie z zerowym x-em.
 						if(possibleHand.rect.x != -1 &&
-							component.rect.x < possibleHand.rect.x){
+							component.rect.x < possibleHand.rect.x &&
+							component.rect.x > 0){
 							possibleHand = component;
 							pointHand = cvPoint(j,i);
 							continue;
@@ -267,7 +270,7 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 
 	cvSetImageROI(blobImg, hand.lastRect);
 	cvCopyImage(blobImg, allBlobs);
-
+/*
 	int all = cvCountNonZero(allBlobs);
 	if(all == 0){
 		cvResetImageROI(blobImg);
@@ -283,6 +286,7 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 	}
 
 	erode += all/4;
+*/
 
 	cvMoments(allBlobs, &moments);
 	int x = moments.m10/moments.m00;
@@ -292,7 +296,7 @@ int HandDetector::findHand(IplImage * skin, IplImage * blobImg, IplImage * origi
 	cvResetImageROI(allBlobs);
 
 	hand.lastPoint = cvPoint(x+hand.lastRect.x, y+hand.lastRect.y);
-	hand.radius = erode;
+	hand.radius = hand.lastRect.width/3;
 
 	//qDebug() << "point: " << x << y << erode;
 

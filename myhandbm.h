@@ -6,6 +6,6 @@ public:
 	MyHandBM(void);
 	~MyHandBM(void);
 
-	int SADWindowSize; // ~5x5..21x21
+	int medianSmooth;
     int numberOfDisparities; // maximum disparity - minimum disparity (> 0)
 };
