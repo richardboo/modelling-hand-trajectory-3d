@@ -25,6 +25,8 @@ void AlgorithmsDialog::initUI(){
 	sgbmDialog = new SGBMDialog(this);
 	bmDialog = new BMDialog(this, false);
 	cudaDialog = new BMDialog(this, true);
+	fastDialog = new FastDialog(this);
+	pixelDialog = new PixelDialog(this);
 
 	connect(ui.buttonGetLight,	SIGNAL(clicked()),
 			this,				SLOT(showLightDialogClicked()));
@@ -47,6 +49,11 @@ void AlgorithmsDialog::initUI(){
 	
 	connect(ui.cudaParamsButton,	SIGNAL(clicked()),
 			this,				SLOT(showCUDAParamsClicked()));
+
+	connect(ui.pixelParamsButton,	SIGNAL(clicked()),
+		this,				SLOT(showPixelParamsClicked()));
+	connect(ui.fastParamsButton,	SIGNAL(clicked()),
+		this,				SLOT(showfastParamsClicked()));
 
 
 	connect(sgbmDialog,	SIGNAL(accepted()),
@@ -135,6 +142,14 @@ void AlgorithmsDialog::showSGBMParamsClicked(){
 
 void AlgorithmsDialog::showCUDAParamsClicked(){
 	cudaDialog->exec();
+}
+
+void AlgorithmsDialog::showPixelParamsClicked(){
+	pixelDialog->exec();
+}
+
+void AlgorithmsDialog::showfastParamsClicked(){
+	fastDialog->exec();
 }
 
 void AlgorithmsDialog::bmChanged(){

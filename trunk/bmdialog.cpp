@@ -21,13 +21,13 @@ BMDialog::~BMDialog()
 void BMDialog::accept(){
 
 	if(!isCuda){
-		StereoModule::BMState.SADWindowSize = ui.sadBox->value();
-		StereoModule::BMState.minDisparity = ui.minDispBox->value();
-		StereoModule::BMState.preFilterCap = ui.preCapBox->value();
-		StereoModule::BMState.numberOfDisparities = ui.dispBox->value();
-		StereoModule::BMState.preFilterSize = ui.preSizeBox->value();
-		StereoModule::BMState.uniquenessRatio = ui.uniqueBox->value();
-		StereoModule::BMState.textureThreshold = ui.textureBox->value();
+		StereoModule::BMState.SADWindowSize			= ui.sadBox->value();
+		StereoModule::BMState.minDisparity			= ui.minDispBox->value();
+		StereoModule::BMState.preFilterCap			= ui.preCapBox->value();
+		StereoModule::BMState.numberOfDisparities	= ui.dispBox->value();
+		StereoModule::BMState.preFilterSize			= ui.preSizeBox->value();
+		StereoModule::BMState.uniquenessRatio		= ui.uniqueBox->value();
+		StereoModule::BMState.textureThreshold		= ui.textureBox->value();
 	}
 	else{
 		StereoModule::BMStateCuda.SADWindowSize = ui.sadBox->value();

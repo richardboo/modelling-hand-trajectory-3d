@@ -66,10 +66,6 @@ bool MgrStereoHand::init(){
 void MgrStereoHand::initUI(){
 
 	// rozmiar przetwarzania
-	sizeGroup = new QButtonGroup(this);
-	sizeGroup->addButton(ui.radioButtonSize0, 0);
-	sizeGroup->addButton(ui.radioButtonSize1, 1);
-	Settings::instance()->initSize(sizeGroup->checkedId());
 
 	processGroup = new QButtonGroup(this);
 	processGroup->addButton(ui.processButtonRadio0, VIDEO);
@@ -77,9 +73,6 @@ void MgrStereoHand::initUI(){
 	processGroup->addButton(ui.processButtonRadio2, CAMERA);
 	Settings::instance()->processType = processGroup->checkedId();
 
-	
-	connect(sizeGroup,	SIGNAL(buttonClicked (int)),
-			this,		SLOT(sizeButtonClicked(int)));
 
 	connect(processGroup,	SIGNAL(buttonClicked (int)),
 			this,			SLOT(processTypeChanged(int)));
@@ -173,7 +166,7 @@ void MgrStereoHand::showImages(){
 	if(process->getNothing()){
 		cvResize(fs->frameShow[0], fs->frameSmaller[0]);//, CV_INTER_NN);
 		cvResize(fs->frameShow[1], fs->frameSmaller[1]);//, CV_INTER_NN);
-		drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
+		//drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
 		leftCamWindow->showImage(fs->frameSmaller[0]);
 		rightCamWindow->showImage(fs->frameSmaller[1]);
 		trajectoryWindow->showImage(fs->trajectorySmaller);
@@ -218,7 +211,7 @@ void MgrStereoHand::showImages(){
 			rightCamWindow->showImage(fs->frameSmallerGray[1]);
 			break;
 		case 3:
-			
+			/*
 			if(process->hand[0]->lastRect.x != -1){
 				drawingModule->drawTextOnFrame("znaleziono", fs->frameBlob[0]);
 				drawingModule->drawMiddleOnFrame(process->hand[0], fs->frameBlob[0]);
@@ -226,13 +219,17 @@ void MgrStereoHand::showImages(){
 			if(process->hand[1]->lastRect.x != -1){
 				drawingModule->drawTextOnFrame("znaleziono", fs->frameBlob[1]);
 				drawingModule->drawMiddleOnFrame(process->hand[1], fs->frameBlob[1]);
-			}
+			}*/
+			cvZero(fs->frameShow[0]);
+			cvZero(fs->frameShow[1]);
 
-			cvResize(fs->frameBlob[0], fs->frameSmallerGray[0], CV_INTER_NN);
-			cvResize(fs->frameBlob[1], fs->frameSmallerGray[1], CV_INTER_NN);
+			cvCopy(fs->frameRectified[0], fs->frameShow[0], fs->frameBlob[0]);
+			cvCopy(fs->frameRectified[1], fs->frameShow[1], fs->frameBlob[1]);
+			cvResize(fs->frameShow[0], fs->frameSmaller[0], CV_INTER_NN);
+			cvResize(fs->frameShow[1], fs->frameSmaller[1], CV_INTER_NN);
 			drawingModule->drawFPSonFrame(process->fps > 0 ? process->fps : 0, fs->frameSmaller[0]);
-			leftCamWindow->showImage(fs->frameSmallerGray[0]);
-			rightCamWindow->showImage(fs->frameSmallerGray[1]);
+			leftCamWindow->showImage(fs->frameSmaller[0]);
+			rightCamWindow->showImage(fs->frameSmaller[1]);
 			
 			break;
 	}
@@ -301,9 +298,6 @@ void MgrStereoHand::changeShowImage(int value){
 	ui.labelShowImage->setText(Settings::instance()->getImageTypeString());
 }
 
-void MgrStereoHand::sizeButtonClicked(int id){
-	Settings::instance()->setSize(id);
-}
 
 void MgrStereoHand::processTypeChanged(int id){
 	Settings::instance()->processType = id;
@@ -313,7 +307,6 @@ void MgrStereoHand::processTypeChanged(int id){
 void MgrStereoHand::setUIstartEnabled(bool enable){
 	ui.buttonStart->setEnabled(!enable);
 	ui.groupBoxCalibration->setEnabled(!enable);
-	ui.groupBoxSize->setEnabled(!enable);
 	ui.groupBoxFilm->setEnabled(!enable);
 	ui.buttonStop->setEnabled(enable);
 }

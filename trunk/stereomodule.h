@@ -13,6 +13,7 @@
 #include "blob.hpp"
 #include "myhandbm.h"
 #include "opencv\stereovar.h"
+#include "faststereostate.h"
 
 using namespace std;
 using namespace cv; 
@@ -34,6 +35,8 @@ public:
 	static CvStereoBMState BMState;
 	static CvStereoBMState BMStateCuda;
 	static MyHandBM myHandBMState;
+	static FastStereoState fastState;
+
 	IplImage * disparityNotNormalized, * andImage;
 	IplImage * onlyHandNormalized[2];
 	IplImage * handGray[2];

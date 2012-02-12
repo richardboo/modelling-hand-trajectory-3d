@@ -158,6 +158,8 @@ void ProcessingThread::process(){
 				time(&endTime);
 				makeEverythingStop();
 			}
+			if(processType == VIDEO)
+				Sleep(100);
 		}
 		}catch(Exception ex){
 			
@@ -397,7 +399,9 @@ bool ProcessingThread::mainLoop(){
 				IplImage * copy = cvCloneImage(frameSkin[i]);
 				bufferSkin[i].push_back(copy);
 
-				IplImage * copy2 = cvCloneImage(frameBlob[i]);
+				IplImage * copy2 = cvCreateImage(Settings::instance()->defSize, 8, 3);
+				cvZero(copy2);
+				cvCopy(frameRectified[i], copy2, frameBlob[i]);
 				bufferHand[i].push_back(copy2);
 
 				IplImage * copy3 = cvCloneImage(frameRectified[i]);
@@ -463,14 +467,14 @@ bool ProcessingThread::mainIdleLoop(){
 
 		cvCopyImage(frame[0], frameShow[0]);
 		cvCopyImage(frame[1], frameShow[1]);
-		cvCopyImage(blackImage, trajectorySmaller);
-		cvCopyImage(blackImage, disparitySmaller);
+		cvZero(trajectorySmaller);
+		cvZero(disparitySmaller);
 	}
 	else{
-		//cvCopyImage(frameShow[0], trajectorySmaller);
-		//cvCopyImage(blackImage, disparitySmaller);
-		cvCopyImage(blackImage, trajectorySmaller);
-		cvCopyImage(blackImage, disparitySmaller);
+		cvZero(frameShow[0]);
+		cvZero(frameShow[1]);
+		cvZero(trajectorySmaller);
+		cvZero(disparitySmaller);
 		ret = false;
 	}
 	framesCounter++;
@@ -725,6 +729,8 @@ void ProcessingThread::recordFilms(QString file1){
 	
 			for(int i = 0; i < buffer[0].size() && i < buffer[1].size(); ++i){
 				cvWriteFrame( videoWriter0, buffer[0].at(i) );
+				cvWriteFrame( videoWriter0, buffer[0].at(i) );
+				cvWriteFrame( videoWriter1, buffer[1].at(i) );
 				cvWriteFrame( videoWriter1, buffer[1].at(i) );
 			}
 
