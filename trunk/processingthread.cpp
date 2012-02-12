@@ -34,7 +34,6 @@ static int stereoAlg;
 float ALPHA_BG = 0.07f;
 int BG_UPDATE_FRAMES = 20;
 int BKG_THRESH = 30;
-int FRAMES_TILL_HAND = 15;
 
 
 ProcessingThread::ProcessingThread(QObject *parent)
@@ -77,13 +76,6 @@ ProcessingThread::ProcessingThread(QObject *parent)
 
 	duringRecognition = false;
 
-	// probka obrazu dloni
-	for(int i = 0; i < 2; ++i){
-		imageHand[i] = cvCreateImage(Settings::instance()->defSize, 8, 3);
-		cvZero(imageHand[i]);
-	}
-	counterTillHandGet = FRAMES_TILL_HAND;
-
 	drawingModule = new DrawingModule;
 }
 
@@ -99,7 +91,6 @@ ProcessingThread::~ProcessingThread(){
 			delete hand[i];
 		if(head[i] != NULL)
 			delete head[i];
-		cvReleaseImage(&imageHand[i]);
 	}
 	delete drawingModule;
 	delete srModule;
@@ -218,6 +209,7 @@ bool ProcessingThread::mainLoop(){
 		}
 
 //////////////// STAT ///////////////////////////
+		/*
 		counterTillHandGet--;
 		if(counterTillHandGet == 0){
 			cvCopyImage(frame[0], imageHand[0]);
@@ -226,7 +218,7 @@ bool ProcessingThread::mainLoop(){
 		}
 		else if(counterTillHandGet > 0){
 			return true;
-		}
+		}*/
 /////////////////////////////////////////////////
 
 		if((segmantationAlg == HIST_ || segmantationAlg == ALL_) && stateHist != STATE_AFTER_HIST){
@@ -258,7 +250,7 @@ bool ProcessingThread::mainLoop(){
 				}
 			}
 		}
-		else if(segmantationAlg == ONLY_BG_ || segmantationAlg == BGSKIN_){
+		else if(segmantationAlg == ONLY_BG_ /*|| segmantationAlg == BGSKIN_*/){
 			
 			if(stateBack == STATE_BEFORE_BACK){
 				for(int i = 0; i < 2; ++i){
@@ -329,6 +321,7 @@ bool ProcessingThread::mainLoop(){
 		counterSkin++;
 /////////////////////////////////////////////////
 
+
 		// stan obydwu to minimum z nich
 		int minRec = min(startRecognized[0], startRecognized[1]);
 		startRecognized[0] = startRecognized[1] = minRec;
@@ -395,6 +388,26 @@ bool ProcessingThread::mainLoop(){
 
 		// odrysowanie trajektorii
 		drawingModule->drawTrajectoryOnFrame(hand[0], trajectorySmaller);
+
+
+//////////////// STAT ///////////////////////////
+		if(framesCounter % 10 == 0){
+
+			for(int i = 0; i < 2; ++i){
+				IplImage * copy = cvCloneImage(frameSkin[i]);
+				bufferSkin[i].push_back(copy);
+
+				IplImage * copy2 = cvCloneImage(frameBlob[i]);
+				bufferHand[i].push_back(copy2);
+
+				IplImage * copy3 = cvCloneImage(frameRectified[i]);
+				bufferRectified[i].push_back(copy3);
+			}
+			IplImage * copy4 = cvCloneImage(disparity);
+			bufferDepth.push_back(copy4);
+		}
+/////////////////////////////////////////////////
+
 	}
 	else{
 	// KALIBRACJA
@@ -753,16 +766,40 @@ void ProcessingThread::storeStatistics(){
 	emit showOverlay("Zapisywanie...", 100000);
 
 	QString file = statisticsDialog->getFileName();
+	QDir fileDir = QDir(file);
+	fileDir.cd("stats");
+	fileDir.mkdir(file);
+	fileDir.cd(file);
 
+	for(int i = 0; i < 2; ++i){
+		for(int k = 0; k < bufferSkin[i].size(); ++k){
+		
+			QString fileSkin = fileDir.absolutePath()+"/skin_f"+QString().number(k)+"c"+QString().number(i)+".jpg";
+			cvSaveImage(fileSkin.toStdString().c_str(), bufferSkin[i][k]);
+
+			QString fileRect = fileDir.absolutePath()+"/rect_f"+QString().number(k)+"c"+QString().number(i)+".jpg";
+			cvSaveImage(fileRect.toStdString().c_str(), bufferRectified[i][k]);
+
+			QString fileHand = fileDir.absolutePath()+"/hand_f"+QString().number(k)+"c"+QString().number(i)+".jpg";
+			cvSaveImage(fileHand.toStdString().c_str(), bufferHand[i][k]);
+		}
+	}
+
+	for(int i = 0; i < bufferDepth.size(); ++i){
+			QString fileDepth = fileDir.absolutePath()+"/disp_f"+QString().number(i)+".jpg";
+			cvSaveImage(fileDepth.toStdString().c_str(), bufferDepth[i]);
+	}
+
+	/*
 	cvSaveImage(QString(file+("_screen0.jpg")).toStdString().c_str(), imageHand[0]);
 	cvSaveImage(QString(file+("_screen1.jpg")).toStdString().c_str(), imageHand[1]);
+	*/
 
 	statisticsDialog->fps = fps;
 	statisticsDialog->file1 = Settings::instance()->fileFilm0;
 	statisticsDialog->file2 = Settings::instance()->fileFilm1;
 	statisticsDialog->calibration = Settings::instance()->fileCalib;
-	statisticsDialog->img1 = file+("_screen0.jpg");
-	statisticsDialog->img2 = file+("_screen1.jpg");
+	statisticsDialog->stats = fileDir.absolutePath();
 
 	statisticsDialog->timeProcess = (int)difftime(endProcessTime, startProcessTime);
 	statisticsDialog->framesProcess = framesStartStopCounter;
@@ -771,17 +808,17 @@ void ProcessingThread::storeStatistics(){
 	statisticsDialog->timeSkin = skinTime*1000.0f/(float)counterSkin;
 	statisticsDialog->timeStereo = stereoTime*1000.0f/(float)framesProcessingCounter;
 
-	statisticsDialog->trajectory = saveTrajectory(file);
+	statisticsDialog->trajectory = saveTrajectory(fileDir.absolutePath()+"/");
 	
 	statisticsDialog->showStatistics();
-	saveStatistics(file);
+	saveStatistics(fileDir.absolutePath()+"/");
 
 	emit showOverlay("Zapisano", 2000);
 }
 
 void ProcessingThread::saveStatistics(QString file){
 	
-	QString filePath = file.append(".txt");
+	QString filePath = file.append("stat.txt");
 	QFile fileTrj(filePath);
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
@@ -795,7 +832,7 @@ void ProcessingThread::saveStatistics(QString file){
 
 QString ProcessingThread::saveTrajectory(QString file){
 	
-	QFile fileTrj(file+".trj");
+	QFile fileTrj(file+"traj.trj");
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
 
@@ -879,13 +916,25 @@ bool ProcessingThread::reinitAll(){
 	framesStartStopCounter = 0;
 	framesProcessingCounter = 0;
 
-	// obraz dloni przy rozpoczeciu i zakonczeniu rozpoznawania
-	cvZero(imageHand[0]);
-	cvZero(imageHand[1]);
-	counterTillHandGet = FRAMES_TILL_HAND;
-
 	stereoAlg = Settings::instance()->stereoAlg;
 	segmantationAlg = Settings::instance()->segmantationAlg;
+
+	for(int i = 0; i < bufferSkin[0].size(); ++i){
+		cvReleaseImage(&bufferSkin[0][i]);
+		cvReleaseImage(&bufferSkin[1][i]);
+		cvReleaseImage(&bufferHand[0][i]);
+		cvReleaseImage(&bufferHand[1][i]);
+		cvReleaseImage(&bufferRectified[0][i]);
+		cvReleaseImage(&bufferRectified[1][i]);
+		cvReleaseImage(&bufferDepth[i]);
+	}
+	bufferSkin[0].clear();
+	bufferSkin[1].clear();
+	bufferHand[0].clear();
+	bufferHand[1].clear();
+	bufferRectified[0].clear();
+	bufferRectified[1].clear();
+	bufferDepth.clear();
 
 	return all;
 }

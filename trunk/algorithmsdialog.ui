@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>320</width>
-    <height>496</height>
+    <height>525</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,28 +40,28 @@
       <item>
        <widget class="QRadioButton" name="radioButtonSegm2">
         <property name="text">
-         <string>Historagm skóry twarzy</string>
+         <string>Wzór w YCrCb</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButtonSegm3">
         <property name="text">
-         <string>Wzór w RGB + histogram skóry twarzy</string>
+         <string>Historagm skóry twarzy</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButtonSegm4">
         <property name="text">
-         <string>Wykrywanie ruchu/eliminacja tła</string>
+         <string>Wzór w RGB + histogram skóry twarzy</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButtonSegm5">
         <property name="text">
-         <string>Eliminacja tła + kolor skóry</string>
+         <string>Wykrywanie ruchu/eliminacja tła</string>
         </property>
        </widget>
       </item>
@@ -118,14 +118,14 @@
       <item row="4" column="0">
        <widget class="QRadioButton" name="radioButtonStereo4">
         <property name="text">
-         <string>Proste Block Matching na ROI</string>
+         <string>Pixel Matching na ROI</string>
         </property>
        </widget>
       </item>
       <item row="5" column="0">
        <widget class="QRadioButton" name="radioButtonStereo5">
         <property name="text">
-         <string>Losowe Color Matching na ROI</string>
+         <string>FAST Feature Points Matching</string>
         </property>
        </widget>
       </item>
@@ -143,23 +143,37 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pixelParamsButton">
+        <property name="text">
+         <string>Parametry</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="fastParamsButton">
+        <property name="text">
+         <string>Parametry</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item>
     <widget class="QGroupBox" name="groupBoxLight">
      <property name="title">
-      <string>Oświetlenie</string>
+      <string>Oświetlenie i tło</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
        <widget class="QLabel" name="labelLight">
         <property name="text">
          <string>Typ oświetlenia jakiegoś</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1">
        <widget class="QPushButton" name="buttonGetLight">
         <property name="maximumSize">
          <size>
@@ -172,23 +186,14 @@
         </property>
        </widget>
       </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBoxBkg">
-     <property name="title">
-      <string>Tło</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
+      <item row="1" column="0">
        <widget class="QLabel" name="labelBkg">
         <property name="text">
          <string>Typ tła jakiegoś</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="1">
        <widget class="QPushButton" name="buttonGetBkg">
         <property name="maximumSize">
          <size>

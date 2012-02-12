@@ -16,10 +16,12 @@
 
 #define RGB_ 0
 #define HSV_ 1
-#define HIST_ 2
-#define ALL_ 3
-#define ONLY_BG_ 4
-#define BGSKIN_ 5
+#define YCRCB_ 2
+#define HIST_ 3
+#define ALL_ 4
+#define ONLY_BG_ 5
+//#define BGSKIN_ 6
+
 
 #define BM_ 0
 #define SGBM_ 1

@@ -32,8 +32,7 @@ public:
 	QString file2;
 	QString calibration;
 	QString trajectory;
-	QString img1;
-	QString img2;
+	QString stats;
 
 
 private:
