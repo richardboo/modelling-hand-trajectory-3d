@@ -4,6 +4,8 @@
 #include <highgui.h>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 #include <opencv2/gpu/gpu.hpp>
 #include <vector>
@@ -34,8 +36,14 @@ public:
 	static MyHandBM myHandBMState;
 	IplImage * disparityNotNormalized, * andImage;
 	IplImage * onlyHandNormalized[2];
+	IplImage * handGray[2];
 
-
+	FastFeatureDetector * detector;
+	BriefDescriptorExtractor * extractor;
+	BruteForceMatcher<Hamming> * matcher_popcount;
+	std::vector<KeyPoint> kpts_1, kpts_2;
+	std::vector<DMatch> matches_popcount;
+	std::vector<Point2f> mpts_1, mpts_2;
 
 	// 8 - max disparity dla moich alg
 	//IplImage * diffImage[8];

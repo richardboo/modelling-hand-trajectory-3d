@@ -360,12 +360,12 @@ bool ProcessingThread::mainLoop(){
 			framesProcessingCounter++;
 			time(&tempStart);
 /////////////////////////////////////////////////
-/*
+
 			if(stereoAlg < MINE_)
 				stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
 			else
 				stereoModule->stereoProcessMine(frameGray, frameBlob, hand, disparity, stereoAlg);
-*/			
+	
 //////////////// STAT ///////////////////////////
 			time(&tempEnd);
 			stereoTime += difftime(tempEnd, tempStart);

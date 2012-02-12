@@ -12,12 +12,25 @@ CvStereoBMState StereoModule::BMStateCuda;
 MyHandBM StereoModule::myHandBMState;
 
 
-StereoModule::StereoModule(void)
-{
+StereoModule::StereoModule(void){
+	detector = NULL;
+	extractor = NULL;
+	matcher_popcount = NULL;
+	handGray[0] = handGray[1] = NULL;
 }
 
-StereoModule::~StereoModule(void)
-{
+StereoModule::~StereoModule(void){
+	if(detector != NULL)
+		delete detector;
+	if(extractor != NULL)
+		delete extractor;
+	if(matcher_popcount != NULL)
+		delete matcher_popcount;
+	if(handGray[0] != NULL)
+		cvReleaseImage(&handGray[0]);
+	if(handGray[1] != NULL)
+		cvReleaseImage(&handGray[1]);
+
 }
 
 void StereoModule::initStates(){
@@ -65,37 +78,26 @@ void StereoModule::initStates(){
 
 void StereoModule::stereoStart(CvSize & size){
 	
-	//BMState = cvCreateStereoBMState();
-    /*
-	BMState.preFilterSize=7;
-    BMState.preFilterCap=21;
-    BMState.SADWindowSize=21;
-    BMState.minDisparity=0;
-    BMState.numberOfDisparities=64;
-    BMState.textureThreshold=1;
-    BMState.uniquenessRatio=1;
-	*/
 	BMState.roi1 = cvRect(0, 0, size.width, size.height);
 	BMState.roi2 = cvRect(0, 0, size.width, size.height);
 
 	BMStateCuda.roi1 = cvRect(0, 0, size.width, size.height);
 	BMStateCuda.roi2 = cvRect(0, 0, size.width, size.height);
 
-	/*
-	sgbm.preFilterCap = 31;
-    sgbm.SADWindowSize = 11;
-    sgbm.P1 = 2*8*sgbm.SADWindowSize*sgbm.SADWindowSize;
-    sgbm.P2 = 2*32*sgbm.SADWindowSize*sgbm.SADWindowSize;
-    sgbm.minDisparity = 0;
-    sgbm.numberOfDisparities = 32;
-    sgbm.uniquenessRatio = 1;
-    sgbm.speckleWindowSize = 400;
-    sgbm.speckleRange = 16;
-    sgbm.disp12MaxDiff = 2;
-	*/
 	sgbm.P1 = 2*8*sgbm.SADWindowSize*sgbm.SADWindowSize;
     sgbm.P2 = 2*32*sgbm.SADWindowSize*sgbm.SADWindowSize;
     sgbm.fullDP = false;
+
+	if(detector != NULL)
+		delete detector;
+	if(extractor != NULL)
+		delete extractor;
+	if(matcher_popcount != NULL)
+		delete matcher_popcount;
+
+	detector = new FastFeatureDetector(30);
+	extractor = new BriefDescriptorExtractor(32);
+	matcher_popcount= new BruteForceMatcher<Hamming>;
 
 	disparityNotNormalized = cvCreateImage(size, IPL_DEPTH_16S, 1);
 	disparityNNmat = Mat(Size(size), CV_16S);
@@ -103,6 +105,13 @@ void StereoModule::stereoStart(CvSize & size){
 
 	onlyHandNormalized[0] = cvCreateImage(size, 8, 1);
 	onlyHandNormalized[1] = cvCreateImage(size, 8, 1);
+
+	if(handGray[0] == NULL){
+		handGray[0] = cvCreateImage(Settings::instance()->defSize, 8, 1);
+		handGray[1] = cvCreateImage(Settings::instance()->defSize, 8, 1);
+	}
+	cvZero(handGray[0]);
+	cvZero(handGray[1]);
 
 	//disp = Mat(Size(size), CV_8U);
 
@@ -256,17 +265,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		
 		int diff = (hands[1]->lastRect.x - hands[0]->lastRect.x);
 		//int diff = abs(hands[0]->lastRect.x+xplus - hands[1]->lastRect.x);
-	/*
-		// 128 - najwieksze disparity
-		diff *= 2;
-		if(diff > 255)	diff = 255;
 
-		if(hands[0]->lastZ != -1){
-			diff = (3*diff + 7*hands[0]->lastZ)/10;
-		}
-	*/
-
-		//diff += 64;
 		cvZero(disparity);
 
 		cvSetImageROI(disparity, hands[0]->lastRect);
@@ -291,15 +290,11 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		// roznica koloru
 		int diffAvg = avg[0].val[0]-avg[1].val[0];
 
-		qDebug() << "diff: " << diffAvg;
+		//qDebug() << "diff: " << diffAvg;
 
 		// wyrownanie roznic srednich kolorow
 		cvAddS(rectifiedGray[1], cvScalar(diffAvg, 0, 0), rectifiedGray[1], blobs[1]);
 
-
-		IplImage * handGray[2];
-		handGray[0] = cvCreateImage(Settings::instance()->defSize, 8, 1);
-		handGray[1] = cvCreateImage(Settings::instance()->defSize, 8, 1);
 
 		cvZero(handGray[0]);
 		cvZero(handGray[1]);
@@ -357,15 +352,6 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		cvSetImageROI(andImage, hands[0]->lastRect);
 
 		CvScalar avgD = cvAvg(andImage, andImage);
-		/*int diff = avgD.val[0]*4;
-		if(diff > 255)	diff = 255;
-
-		if(hands[0]->lastZ != -1){
-			diff = (3*diff + 7*hands[0]->lastZ)/10;
-		}
-		avgD = cvScalarAll(diff);
-		*/
-		
 		cvSet(disparity, avgD, blobs[0]);
 
 		cvResetImageROI(blobs[0]);
@@ -379,91 +365,73 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		hands[0]->setLastPointWithZ(avgD.val[0]);
 		hands[1]->setLastPointWithZ(avgD.val[0]);
 		
-
-	/*
-		cvZero(andImage);
-
-		int indexToSearch = 0, indexOther = 1;
-		int diff = (hands[0]->lastRect.x - hands[1]->lastRect.x);
-
-		BwImage bw0(rectifiedGray[indexToSearch]);
-		BwImage bw1(rectifiedGray[indexOther]);
-		BwImage disp(andImage);
-
-		for(int y = hands[indexToSearch]->lastRect.y; 
-				y < hands[indexToSearch]->lastRect.y + hands[indexToSearch]->lastRect.height; ++y){
-			
-					int nextI = 0;
-			for(int x = hands[indexToSearch]->lastRect.x; 
-				x < hands[indexToSearch]->lastRect.x + hands[indexToSearch]->lastRect.width; ++x){
-				
-				// szukamy tylko pierwszych 5
-				int currMin = 300;
-				int diff = 0;
-				int xfound = -1;
-				int beginX = hands[indexOther]->lastRect.x+nextI;
-				for(int i = beginX; i < beginX+5 && i < Settings::instance()->imageSize.width; ++i){
-					
-					if(bw0[y][x] == 0 || bw1[y][i] == 0){
-						continue;
-					}
-
-					diff = abs(bw0[y][x] - bw1[y][i]);
-					if(diff < currMin && diff < 5){
-						currMin = diff;
-						xfound = i;
-					}
-				}
-				if(xfound != -1){
-					disp[y][x] = diff+xfound-beginX+64;
-					nextI = xfound-beginX;
-				}else{
-					disp[y][x] = diff+64;
-					nextI++;
-				}
-			}
-		}
-
-		CvScalar avg = cvAvg(andImage, blobs[indexToSearch]);
-		diff = avg.val[0];
-		diff *= 2;
-		if(diff > 255)	diff = 255;
-
-		if(hands[0]->lastZ != -1){
-			diff = (3*diff + 7*hands[0]->lastZ)/10;
-		}
-
-		hands[0]->setLastPointWithZ(diff);
-		hands[1]->setLastPointWithZ(diff);
-
-		cvZero(disparity);
-		cvSet(disparity, cvScalarAll(diff), blobs[indexToSearch]);
-*/
 	}
 	else if(type == MINE_RND_){
 		
+		kpts_1.clear();
+		kpts_2.clear();
+		mpts_1.clear();
+		mpts_2.clear();
+
+		// wyselekcjonowanie samego obrazu dloni
+		cvZero(handGray[0]);
+		cvZero(handGray[1]);
+		cvCopy(rectifiedGray[0], handGray[0], blobs[0]);
+		cvCopy(rectifiedGray[1], handGray[1], blobs[1]);
+
+		Mat img1(handGray[0]);
+		Mat img2(handGray[1]);
+
+		CvSize sizeAll = cvSize(min(hands[0]->lastRect.width, hands[1]->lastRect.width),
+								min(hands[0]->lastRect.height, hands[1]->lastRect.height));
+
+		int minW = MIN(hands[0]->lastRect.width, hands[1]->lastRect.width);
+		int minH = MIN(hands[0]->lastRect.height, hands[1]->lastRect.height);
+
+		// region dloni
+		Mat im1 = img1(cv::Rect(hands[0]->lastRect.x, hands[0]->lastRect.y, minW, minH));
+		Mat im2 = img2(cv::Rect(hands[1]->lastRect.x, hands[1]->lastRect.y, minW, minH));
+
+		// znajdujemy keypointsy
+		detector->detect(im1, kpts_1);
+		detector->detect(im2, kpts_2);
+
+		// ekstracja cech
+		Mat desc_1, desc_2;
+		extractor->compute(im1, kpts_1, desc_1);
+		extractor->compute(im2, kpts_2, desc_2);
+
+		// dopasowanie
 		
-/*
-		RobustMatcher rmatcher;
-		rmatcher.setConfidenceLevel(0.98);
-		rmatcher.setMinDistanceToEpipolar(1.0);
-		rmatcher.setRatio(0.65f);
-		cv::Ptr<cv::FeatureDetector> pfd= new cv::SurfFeatureDetector(10); 
-		rmatcher.setFeatureDetector(pfd);
+		matcher_popcount->match(desc_1, desc_2, matches_popcount);
+		
+		// przygotowanie wektorow punktow dopasowanych
+		// sprawdzenie czy leza na mniej wiecej tej samej linii
+		// o razu obliczanie disparity miedzy pasujacymi
+		int counter = 0;
+		int dispAll = 0;
+		//mpts_1.reserve(matches_popcount.size());
+		//mpts_2.reserve(matches_popcount.size());
+		for (size_t i = 0; i < matches_popcount.size(); i++){
+			const DMatch& match = matches_popcount[i];
+			if(abs(kpts_1[match.queryIdx].pt.y - kpts_2[match.trainIdx].pt.y) < 3){
+				mpts_1.push_back(kpts_1[match.queryIdx].pt);
+				mpts_2.push_back(kpts_2[match.trainIdx].pt);
+				counter++;
+				dispAll += kpts_2[match.trainIdx].pt.x - kpts_1[match.queryIdx].pt.x;
+			}
+		}
 
-		// Match the two images
-		std::vector<cv::DMatch> matches;
-		std::vector<cv::KeyPoint> keypoints1, keypoints2;
-		cv::Mat fundemental= rmatcher.match(image1,image2,matches, keypoints1, keypoints2);
+		if(counter == 0){
+			return;
+		}
 
-		// draw the matches
-		cv::Mat imageMatches;
-		cv::drawMatches(image1,keypoints1,  // 1st image and its keypoints
-						image2,keypoints2,  // 2nd image and its keypoints
-						matches,			// the matches
-						imageMatches,		// the image produced
-						cv::Scalar(255,255,255)); // color of the lines
-*/
+		int disp = dispAll/counter;
+		disp += hands[1]->lastRect.x - hands[0]->lastRect.x;
+		cvSet(disparity, cvScalarAll(disp), blobs[0]);
+		hands[0]->setLastPointWithZ(disp);
+		hands[1]->setLastPointWithZ(disp);
+
 		return;
 
 	}

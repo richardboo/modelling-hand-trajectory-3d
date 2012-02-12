@@ -170,59 +170,6 @@ void MgrStereoHand::initWindows(){
 
 void MgrStereoHand::showImages(){
 
-	Mat im1(640, 480, CV_8U);
-	Mat im2(640, 480, CV_8U);
-
-	Mat image1k(640, 480, CV_8UC3);
-	Mat image2k(640, 480, CV_8UC3);
-
-	cv::cvtColor(Mat(fs->frame[0]), im1, CV_BGR2GRAY);
-	cv::cvtColor(Mat(fs->frame[1]), im2, CV_BGR2GRAY);
-
-	FastFeatureDetector detector(30);
-	BriefDescriptorExtractor extractor(32); //this is really 32 x 8 matches since they are binary matches packed into bytes
-
-	vector<KeyPoint> kpts_1, kpts_2;
-	detector.detect(im1, kpts_1);
-	detector.detect(im2, kpts_2);
-
-	if(kpts_1.size() == 0 || kpts_2.size() == 0)
-		return;
-  
-	Mat desc_1, desc_2;
-
-	  extractor.compute(im1, kpts_1, desc_1);
-	  extractor.compute(im2, kpts_2, desc_2);
-	  
-	BruteForceMatcher<Hamming> matcher_popcount;
-	vector<DMatch> matches_popcount;
-	matcher_popcount.match(desc_1, desc_2, matches_popcount);
-
-	vector<Point2f> mpts_1, mpts_2;
-
-	  mpts_1.reserve(matches_popcount.size());
-	  mpts_2.reserve(matches_popcount.size());
-	  for (size_t i = 0; i < matches_popcount.size(); i++)
-	  {
-		const DMatch& match = matches_popcount[i];
-		mpts_1.push_back(kpts_1[match.queryIdx].pt);
-		mpts_2.push_back(kpts_2[match.trainIdx].pt);
-	  }
-
-		// z tego co rozumiem:
-	  // mpts_2,1 - punkty odpowiadajace sobie sa w kolejnych indeksach na odpowiednich obrazach
-
-	  if(matches_popcount.size() == 0)
-		  return;
-	//vector<uchar> outlier_mask;
-	//Mat H = findHomography(Mat(mpts_2), Mat(mpts_1), outlier_mask, RANSAC, 1);
-
-	Mat outimg;
-	drawMatches(im1, kpts_1, im2, kpts_2, matches_popcount, outimg);
-	imshow("matches - popcount - outliers removed", outimg);
-
-	return;
-
 	if(process->getNothing()){
 		cvResize(fs->frameShow[0], fs->frameSmaller[0]);//, CV_INTER_NN);
 		cvResize(fs->frameShow[1], fs->frameSmaller[1]);//, CV_INTER_NN);

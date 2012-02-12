@@ -178,7 +178,7 @@ void SkinDetector::detectSkinYCRCB(IplImage * frame, IplImage * skin, CvRect & r
 				if(	pix.cr <= 173 &&
 					pix.cr >= 133 &&
 					pix.cb >= 77 &&
-					pix.cb >= 127 
+					pix.cb <= 127 
 					){
 					skin_img[i][j] = 255;
 			}
