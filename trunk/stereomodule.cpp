@@ -2,9 +2,11 @@
 #include "image.hpp"
 #include "imageutils.hpp"
 #include "settings.h"
+#include "opencv/matcher.h"
 
 
 cv::StereoSGBM StereoModule::sgbm;
+StereoVar StereoModule::vars;
 CvStereoBMState StereoModule::BMState;
 CvStereoBMState StereoModule::BMStateCuda;
 MyHandBM StereoModule::myHandBMState;
@@ -45,6 +47,19 @@ void StereoModule::initStates(){
     sgbm.speckleWindowSize = 400;
     sgbm.speckleRange = 16;
     sgbm.disp12MaxDiff = 2;
+
+	vars.levels = 6;
+	vars.pyrScale = 0.6;
+	vars.nIt = 3;
+	vars.minDisp = -32;
+	vars.maxDisp = 0;
+	vars.poly_n = 3;
+	vars.poly_sigma = 0.0;
+	vars.fi = 5.0f;
+	vars.lambda = 0.1;
+	vars.penalization = vars.PENALIZATION_TICHONOV;
+	vars.cycle = vars.CYCLE_V;
+	vars.flags = vars.USE_SMART_ID | vars.USE_INITIAL_DISPARITY | 1 * vars.USE_MEDIAN_FILTERING ;
 }
 
 
@@ -89,7 +104,7 @@ void StereoModule::stereoStart(CvSize & size){
 	onlyHandNormalized[0] = cvCreateImage(size, 8, 1);
 	onlyHandNormalized[1] = cvCreateImage(size, 8, 1);
 
-	disp = Mat(Size(size), CV_8U);
+	//disp = Mat(Size(size), CV_8U);
 
 //GPU
 	/*
@@ -111,6 +126,17 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 		disp = d_disp;
 		andImage = &IplImage(disp);
 		*/
+		Mat d;
+		vars(Mat(rectifiedGray[1]), Mat(rectifiedGray[0]), d);
+		d.convertTo(disp, CV_8U);
+		andImage = &IplImage(disp);
+		CvScalar s = cvAvg(disparityNotNormalized, blobs[1]);
+		cvZero(disparity);
+		cvCopy(andImage, disparity);
+		hands[0]->setLastPointWithZ(s.val[0]);
+		hands[1]->setLastPointWithZ(s.val[0]);
+		
+		return RESULT_OK;
 	}
 	else if(type == BM_){
 		//BMState.roi1 = hands[0]->lastRect;
@@ -135,9 +161,18 @@ int StereoModule::stereoProcessGray(IplImage* rectifiedGray[2], IplImage * blobs
 	}
 	else if(type == SGBM_){
 		
-		sgbm(Mat(rectifiedGray[0]), Mat(rectifiedGray[1]), disparityNNmat);
+		sgbm(Mat(rectifiedGray[1]), Mat(rectifiedGray[0]), disparityNNmat);
 		disparityNNmat.convertTo(disp, CV_8U, 255/(sgbm.numberOfDisparities*16.));
+		
+		CvScalar s = cvAvg(&IplImage(disparityNNmat), blobs[1]);
+		
 		andImage = &IplImage(disp);
+		cvZero(disparity);
+		cvCopy(andImage, disparity, blobs[1]);
+		hands[0]->setLastPointWithZ(s.val[0]);
+		hands[1]->setLastPointWithZ(s.val[0]);
+		
+		return RESULT_OK;
 	}
 
 	
@@ -191,11 +226,12 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		CvSize sizeAll = cvSize(min(hands[0]->lastRect.width, hands[1]->lastRect.width),
 								min(hands[0]->lastRect.height, hands[1]->lastRect.height));
 
-		cvSetImageROI(andImage, cvRect(0, 0, sizeAll.width, sizeAll.height));
-		
+		//cvSetImageROI(andImage, cvRect(0, 0, sizeAll.width, sizeAll.height));
+		/*
 		int nonZeroCount = 0;
 		int xplus, currMax;
 		currMax = 0;
+		
 		for(int i = -5; i < 6; ++i){
 
 			if(hands[0]->lastRect.x+i < 0 || hands[0]->lastRect.x+sizeAll.width >= Settings::instance()->imageSize.width)
@@ -216,8 +252,9 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		}
 
 		cvResetImageROI(andImage);
+		*/
 		
-		int diff = (hands[0]->lastRect.x - hands[1]->lastRect.x);
+		int diff = (hands[1]->lastRect.x - hands[0]->lastRect.x);
 		//int diff = abs(hands[0]->lastRect.x+xplus - hands[1]->lastRect.x);
 	/*
 		// 128 - najwieksze disparity
@@ -229,7 +266,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		}
 	*/
 
-		diff += 64;
+		//diff += 64;
 		cvZero(disparity);
 
 		cvSetImageROI(disparity, hands[0]->lastRect);
@@ -301,7 +338,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 					if(right[y][x+i+realDiffBetween] == 0)
 						continue;
 
-					currVal = abs(left[y][x]-right[y][x+i+realDiffBetween]);
+					currVal = left[y][x]-right[y][x+i+realDiffBetween];
 					if(currVal < currMin){
 						currMin = currVal;
 						rawDispImage[y][x] = i+realDiffBetween;
@@ -405,6 +442,30 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 	}
 	else if(type == MINE_RND_){
 		
+		
+/*
+		RobustMatcher rmatcher;
+		rmatcher.setConfidenceLevel(0.98);
+		rmatcher.setMinDistanceToEpipolar(1.0);
+		rmatcher.setRatio(0.65f);
+		cv::Ptr<cv::FeatureDetector> pfd= new cv::SurfFeatureDetector(10); 
+		rmatcher.setFeatureDetector(pfd);
+
+		// Match the two images
+		std::vector<cv::DMatch> matches;
+		std::vector<cv::KeyPoint> keypoints1, keypoints2;
+		cv::Mat fundemental= rmatcher.match(image1,image2,matches, keypoints1, keypoints2);
+
+		// draw the matches
+		cv::Mat imageMatches;
+		cv::drawMatches(image1,keypoints1,  // 1st image and its keypoints
+						image2,keypoints2,  // 2nd image and its keypoints
+						matches,			// the matches
+						imageMatches,		// the image produced
+						cv::Scalar(255,255,255)); // color of the lines
+*/
+		return;
+
 	}
 
 }

@@ -10,6 +10,7 @@
 
 #include "blob.hpp"
 #include "myhandbm.h"
+#include "opencv\stereovar.h"
 
 using namespace std;
 using namespace cv; 
@@ -27,6 +28,7 @@ public:
 	static void initStates();
 
 	static cv::StereoSGBM sgbm;
+	static StereoVar vars;
 	static CvStereoBMState BMState;
 	static CvStereoBMState BMStateCuda;
 	static MyHandBM myHandBMState;

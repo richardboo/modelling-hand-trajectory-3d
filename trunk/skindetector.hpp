@@ -22,6 +22,8 @@ public:
 	void detectSkinAll(IplImage * frame, IplImage * skin, CvRect & rect);
 	void detectSkinBg(IplImage * frame, IplImage * skin, CvRect & rect, IplImage * fg);
 	void detectSkinBgR(IplImage * frame, IplImage * skin, CvRect & rect, IplImage * fg);
+
+	void detectSkinYCRCB(IplImage * frame, IplImage * skin, CvRect & rect);
 /*
 	void detectSkinFromHistogram(IplImage * frame, CvRect & rect);
 	void detectSkinRGB(IplImage * frame, CvRect & rect);
