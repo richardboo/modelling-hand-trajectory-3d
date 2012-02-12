@@ -93,8 +93,9 @@ void SkinDetector::detectSkin(IplImage * frame, IplImage * skin, CvRect & rect, 
 		case HSV_:	detectSkinHSV(frame, skin, rect);	break;
 		case HIST_:	detectSkinHist(frame, skin, rect);	break;
 		case ALL_:	detectSkinAll(frame, skin, rect);	break;
-		case BGSKIN_:	detectSkinBgR(frame, skin, rect, fg);	break;
+		//case BGSKIN_:	detectSkinBgR(frame, skin, rect, fg);	break;
 		case ONLY_BG_:	detectSkinBg(frame, skin, rect, fg);	break;
+		case YCRCB_:	detectSkinYCRCB(frame, skin, rect);	break;
 	}
 }
 

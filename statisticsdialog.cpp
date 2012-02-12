@@ -48,7 +48,7 @@ void StatisticsDialog::showStatistics(){
 	stats += "Film2: " + (file2.isEmpty() ? "(brak)" : file2.mid(file2.lastIndexOf("/")+1))+"\n";
 	stats += "Kalibracja: " + (calibration.isEmpty() ? "(brak)" : calibration.mid(calibration.lastIndexOf("/")+1))+"\n";
 	stats += "Trajektoria: " + (trajectory.isEmpty() ? "(brak)" : trajectory.mid(trajectory.lastIndexOf("/")+1))+"\n";
-	stats += "Probki skory: " + (img1.isEmpty() ? "(brak)" : img1.mid(img1.lastIndexOf("/")+1))+" "+(img2.isEmpty() ? "(brak)" : img2.mid(img2.lastIndexOf("/")+1))+"\n";
+	stats += "Probki: " + (stats.isEmpty() ? "(brak)" : stats )+"\n";
 
 	ui.statLabel->setText(stats);
 }

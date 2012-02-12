@@ -177,12 +177,11 @@ private:
 	// ilosc wszystkich klatek, w ktorych pobrana byla trajektoria
 	int framesProcessingCounter;
 
-	// obraz dloni przy rozpoczeciu i zakonczeniu rozpoznawania
-	IplImage * imageHand[2];
-	// za ile klatek rozostanie pobrana dlon
-	int counterTillHandGet;
-
-
+	// wektory probek obrazu podczas przetwarzania, pobierane co 10 klatek
+	std::vector<IplImage *> bufferSkin[2];
+	std::vector<IplImage *> bufferHand[2];
+	std::vector<IplImage *> bufferRectified[2];
+	std::vector<IplImage *> bufferDepth;
 
 	float lastUpdate;
 	float fpsUpdateInterval;
