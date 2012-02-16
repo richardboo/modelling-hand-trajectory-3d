@@ -372,7 +372,7 @@ void CalibrationModule::setRealCoordinates(Blob * hands[2]){
 	
 	float x = hands[0]->lastPoint.x * cvmGet(mQ, 0, 0) + cvmGet(mQ, 0, 3);
 	float y = hands[0]->lastPoint.y * cvmGet(mQ, 1, 1) + cvmGet(mQ, 1, 3);
-	float d = hands[0]->lastDisp/16.0f;
+	float d = hands[0]->lastDisp;
 	float z = cvmGet(mQ, 2, 3);
 	float w = d * cvmGet(mQ, 3, 2) + cvmGet(mQ, 3, 3);
 
@@ -381,7 +381,7 @@ void CalibrationModule::setRealCoordinates(Blob * hands[2]){
 	z = z/w;
 
 	hands[0]->lastDisp = z;
-
+	//qDebug() << "real: " << x << y << z;
 	/*
 
 	qDebug() << "real: " << x << y << z;
