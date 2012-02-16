@@ -21,7 +21,7 @@ public:
 	int fps;
 	int timeS;
 
-	double timeProcess;
+	int timeProcess;
 	int framesProcess;
 	int framesProper;
 

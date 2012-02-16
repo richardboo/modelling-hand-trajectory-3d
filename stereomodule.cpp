@@ -267,16 +267,21 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		cvResetImageROI(andImage);
 		*/
 		
-		int diff = (hands[1]->lastRect.x - hands[0]->lastRect.x);
+		int diff = -(hands[1]->lastRect.width/2+hands[1]->lastRect.x - hands[0]->lastRect.x - hands[0]->lastRect.width/2);
 		//int diff = abs(hands[0]->lastRect.x+xplus - hands[1]->lastRect.x);
 
 		cvZero(disparity);
 
 		cvSetImageROI(disparity, hands[0]->lastRect);
 		cvSetImageROI(blobs[0], hands[0]->lastRect);
+
+		diff = diff*255.0f/64.0f;
+
 		cvSet(disparity, cvScalarAll(diff), blobs[0]);
 		cvResetImageROI(blobs[0]);
 		cvResetImageROI(disparity);
+
+		
 
 		hands[0]->setLastPointWithZ(diff);
 		hands[1]->setLastPointWithZ(diff);
@@ -313,7 +318,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		int halfDisp = myHandBMState.numberOfDisparities/2;
 		int currMin = 300;
 		int currVal = 0;
-		int realDiffBetween = hands[1]->lastRect.x-hands[0]->lastRect.x;
+		int realDiffBetween = hands[0]->lastRect.x-hands[1]->lastRect.x;
 
 
 		// po calej wysokosci obrazka
@@ -422,7 +427,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 				mpts_1.push_back(kpts_1[match.queryIdx].pt);
 				mpts_2.push_back(kpts_2[match.trainIdx].pt);
 				counter++;
-				dispAll += kpts_2[match.trainIdx].pt.x - kpts_1[match.queryIdx].pt.x;
+				dispAll += -(kpts_2[match.trainIdx].pt.x - kpts_1[match.queryIdx].pt.x);
 			}
 		}
 
@@ -431,7 +436,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		}
 
 		int disp = dispAll/counter;
-		disp += hands[1]->lastRect.x - hands[0]->lastRect.x;
+		disp += hands[0]->lastRect.x - hands[1]->lastRect.x;
 		cvSet(disparity, cvScalarAll(disp), blobs[0]);
 		hands[0]->setLastPointWithZ(disp);
 		hands[1]->setLastPointWithZ(disp);

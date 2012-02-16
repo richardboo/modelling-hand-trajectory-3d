@@ -185,6 +185,25 @@ int CalibrationModule::calibrationEnd(){
 
 	qDebug() << "ERROR: " << rms;
 
+	mQ = cvCreateMat( 4, 4, CV_32F);
+	cvZero(mQ);
+
+	cvUndistortPoints( &_imagePoints1, &_imagePoints1,&_M1, &_D1, 0, &_M1 );
+    cvUndistortPoints( &_imagePoints2, &_imagePoints2,&_M2, &_D2, 0, &_M2 );
+
+
+	double R1[3][3], R2[3][3], P1[3][4], P2[3][4];
+	CvMat _R1 = cvMat(3, 3, CV_64F, R1);
+	CvMat _R2 = cvMat(3, 3, CV_64F, R2);
+	CvMat _P1 = cvMat(3, 4, CV_64F, P1);
+	CvMat _P2 = cvMat(3, 4, CV_64F, P2);
+
+	cvStereoRectify( &_M1, &_M2, &_D1, &_D2, imageSize,
+					&_R, &_T,
+					&_R1, &_R2, &_P1, &_P2, mQ,
+					0/*CV_CALIB_ZERO_DISPARITY*/ );
+
+/*
     //Always work in undistorted space
     cvUndistortPoints( &_imagePoints1, &_imagePoints1,&_M1, &_D1, 0, &_M1 );
     cvUndistortPoints( &_imagePoints2, &_imagePoints2,&_M2, &_D2, 0, &_M2 );
@@ -213,7 +232,7 @@ int CalibrationModule::calibrationEnd(){
     cvInvert(&_M2, &_iM);
     cvMatMul(&_H2, &_M2, &_R2);
     cvMatMul(&_iM, &_R2, &_R2);
-
+*/
 
     //Precompute map for cvRemap()
     cvReleaseMat(&mx[0]);
@@ -225,10 +244,15 @@ int CalibrationModule::calibrationEnd(){
     mx[1] = cvCreateMat( imageSize.height,imageSize.width, CV_32F );
     my[1] = cvCreateMat( imageSize.height,imageSize.width, CV_32F );
 
+	cvInitUndistortRectifyMap(&_M1,&_D1,&_R1,&_P1,mx[0],my[0]);
+	cvInitUndistortRectifyMap(&_M2,&_D2,&_R2,&_P2,mx[1],my[1]);
+
+	/*
     cvInitUndistortRectifyMap(&_M1,&_D1,&_R1,&_M1,mx[0],my[0]);
     cvInitUndistortRectifyMap(&_M2,&_D2,&_R2,&_M2,mx[1],my[1]);
 
 	//gets parameters for reprojection matrix Q 
+	
 	float Fx_= cvmGet( &_M1, 0, 0 ); // focal length in x direction of the rectified image in pixels 
 	float Fy_= cvmGet( &_M2, 1, 1 ); // focal length in y direction of the rectified image in pixels 
 	float Tx_= cvmGet( &_T, 0, 0 ); // Translation in x direction from the left camera to the right camera 
@@ -237,23 +261,18 @@ int CalibrationModule::calibrationEnd(){
 	float Cy_= cvmGet( &_M1, 1, 2 ); // y coordinate of the optical center of both left and right cameras 
 	
 	float Qq[]= { 1, 0, 0, -Clx_, 0, 1, 0, -Cy_, 0, 0, 0, (Fx_+Fy_)/2, 0, 0, -1/Tx_, (Crx_-Clx_)/Tx_ }; 
-/*
-	qDebug() << "should be";
-	for(int i = 0; i < 16; ++i){
-		qDebug() << Qq[i];
-	}
-*/
 	mQ = cvCreateMat( 4, 4, CV_32F);
 	//cvZero(mQ);
 	CvMat mat =	cvMat( 4, 4, CV_32F, Qq );
 	cvCopy(&mat, mQ);
-/*
+	*/
+
 	qDebug() << "matrix" ;
 	qDebug() << "|" << cvmGet(mQ, 0, 0) << cvmGet(mQ, 0, 1) << cvmGet(mQ, 0, 2) << cvmGet(mQ, 0, 3) << "|" ;
 	qDebug() << "|" << cvmGet(mQ, 1, 0) << cvmGet(mQ, 1, 1) << cvmGet(mQ, 1, 2) << cvmGet(mQ, 1, 3) << "|" ;
 	qDebug() << "|" << cvmGet(mQ, 2, 0) << cvmGet(mQ, 2, 1) << cvmGet(mQ, 2, 2) << cvmGet(mQ, 2, 3) << "|" ;
 	qDebug() << "|" << cvmGet(mQ, 3, 0) << cvmGet(mQ, 3, 1) << cvmGet(mQ, 3, 2) << cvmGet(mQ, 3, 3) << "|" ;
-*/	
+
 	/*
 GPU
 	m_mx1 = mx1;
@@ -350,10 +369,10 @@ GPU
 }
 
 void CalibrationModule::setRealCoordinates(Blob * hands[2]){
-	/*
+	
 	float x = hands[0]->lastPoint.x * cvmGet(mQ, 0, 0) + cvmGet(mQ, 0, 3);
 	float y = hands[0]->lastPoint.y * cvmGet(mQ, 1, 1) + cvmGet(mQ, 1, 3);
-	float d = hands[0]->lastDisp;
+	float d = hands[0]->lastDisp/16.0f;
 	float z = cvmGet(mQ, 2, 3);
 	float w = d * cvmGet(mQ, 3, 2) + cvmGet(mQ, 3, 3);
 
@@ -361,8 +380,12 @@ void CalibrationModule::setRealCoordinates(Blob * hands[2]){
 	y = y/w;
 	z = z/w;
 
+	hands[0]->lastDisp = z;
+
+	/*
+
 	qDebug() << "real: " << x << y << z;
-*/
+
 	float* p=new float[3];
 	p[0]=hands[0]->lastPoint.x;
 	p[1]=hands[0]->lastPoint.y;
@@ -381,4 +404,5 @@ void CalibrationModule::setRealCoordinates(Blob * hands[2]){
 	qDebug() << "real: " << x_new << y_new << d_new;
 
 	delete p;
+	*/
 }
