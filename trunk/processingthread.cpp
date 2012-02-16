@@ -180,8 +180,9 @@ bool ProcessingThread::mainLoop(){
 			// jesli jest video to zatrzymanie
 			// i zebranie statystyk
 			if(processType == VIDEO){
-				makeEverythingStop();
+				nothing = true;
 			}
+			
 			return false;
 		}
 		frame[i] = frameGrabber[i]->getNextFrame();
