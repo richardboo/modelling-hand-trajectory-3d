@@ -27,7 +27,7 @@
       <number>16</number>
      </property>
      <property name="maximum">
-      <number>64</number>
+      <number>128</number>
      </property>
      <property name="singleStep">
       <number>16</number>

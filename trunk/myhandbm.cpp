@@ -2,7 +2,7 @@
 
 MyHandBM::MyHandBM(void){
 	medianSmooth = 3;
-	numberOfDisparities = 40;
+	numberOfDisparities = 70;
 }
 
 MyHandBM::~MyHandBM(void)

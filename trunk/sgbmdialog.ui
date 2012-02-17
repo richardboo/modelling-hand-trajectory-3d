@@ -50,7 +50,7 @@
       <number>3</number>
      </property>
      <property name="maximum">
-      <number>31</number>
+      <number>51</number>
      </property>
      <property name="singleStep">
       <number>2</number>
@@ -69,8 +69,11 @@
    </item>
    <item row="3" column="1">
     <widget class="QSpinBox" name="minDispBox">
+     <property name="minimum">
+      <number>-64</number>
+     </property>
      <property name="maximum">
-      <number>25</number>
+      <number>64</number>
      </property>
     </widget>
    </item>
@@ -87,7 +90,7 @@
       <number>16</number>
      </property>
      <property name="maximum">
-      <number>64</number>
+      <number>128</number>
      </property>
      <property name="singleStep">
       <number>16</number>
@@ -107,13 +110,13 @@
    <item row="5" column="1">
     <widget class="QSpinBox" name="uniqueBox">
      <property name="minimum">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="maximum">
       <number>21</number>
      </property>
      <property name="singleStep">
-      <number>2</number>
+      <number>1</number>
      </property>
     </widget>
    </item>
