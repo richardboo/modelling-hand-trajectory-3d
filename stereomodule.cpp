@@ -308,12 +308,80 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		// wyrownanie roznic srednich kolorow
 		cvAddS(rectifiedGray[1], cvScalar(diffAvg, 0, 0), rectifiedGray[1], blobs[1]);
 
-
 		cvZero(handGray[0]);
 		cvZero(handGray[1]);
 
+		int realDiffBetween = hands[1]->lastRect.x-hands[0]->lastRect.x;
+		int halfDisp = myHandBMState.numberOfDisparities/2 - abs(realDiffBetween);
+		if(halfDisp<0)
+			halfDisp = 0;
+
+		cvSetImageROI(handGray[0], cvRect(0, 0, hands[0]->lastRect.width, hands[0]->lastRect.height));
+		cvSetImageROI(handGray[1], cvRect(halfDisp, 0, hands[1]->lastRect.width, hands[1]->lastRect.height));
+
+		cvSetImageROI(rectifiedGray[0], hands[0]->lastRect);
+		cvSetImageROI(rectifiedGray[1], hands[1]->lastRect);
+		cvSetImageROI(blobs[0], hands[0]->lastRect);
+		cvSetImageROI(blobs[1], hands[1]->lastRect);
+
 		cvCopy(rectifiedGray[0], handGray[0], blobs[0]);
 		cvCopy(rectifiedGray[1], handGray[1], blobs[1]);
+
+		cvResetImageROI(blobs[0]);
+		cvResetImageROI(blobs[1]);
+		cvResetImageROI(handGray[0]);
+		cvResetImageROI(handGray[1]);
+		cvResetImageROI(rectifiedGray[0]);
+		cvResetImageROI(rectifiedGray[1]);
+
+		BwImage zero(handGray[0]);
+		BwImage one(handGray[1]);
+
+		int currMin = 300;
+		int currVal = 0;
+
+
+		for(int y = 0; y < hands[0]->lastRect.height; ++y){
+			for(int x = 0; x < hands[0]->lastRect.width+halfDisp; ++x){
+			
+				if(zero[y][x] == 0)
+					continue;
+				rawDispImage[y+hands[0]->lastRect.y][x+hands[0]->lastRect.x] = realDiffBetween+128;
+				
+				currMin = 100;
+
+				for(int i = 0; i < halfDisp*2; ++i){
+
+					if(one[y][x+i] == 0)
+						continue;
+
+					currVal = abs(one[y][x+i]-zero[y][x]);
+					if(currVal < currMin){
+						currMin = currVal;
+						//qDebug() << i;
+						rawDispImage[y+hands[0]->lastRect.y][x+hands[0]->lastRect.x] = i+realDiffBetween+128;
+					}
+				}
+			}
+		}
+		cvSmooth(andImage, andImage, CV_MEDIAN, myHandBMState.medianSmooth);
+		cvCopyImage(andImage, disparity);
+
+		CvScalar avgD = cvAvg(andImage, andImage);
+
+		cvSet(andImage, cvScalarAll(255));
+		cvSub(andImage, disparity, disparity, disparity);
+		
+
+		hands[0]->setLastPointWithZ(avgD.val[0]-128);
+		hands[1]->setLastPointWithZ(avgD.val[0]-128);
+
+/*
+		cvCopy(rectifiedGray[0], handGray[0], blobs[0]);
+		cvCopy(rectifiedGray[1], handGray[1], blobs[1]);
+
+		cvSetImageROI(
+
 
 		BwImage left(handGray[0]);
 		BwImage right(handGray[1]);
@@ -333,51 +401,54 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 			for(int x = hands[indexToSearch]->lastRect.x-halfDisp; 
 				x < hands[indexToSearch]->lastRect.x + hands[indexToSearch]->lastRect.width-halfDisp; ++x){
 
-				if(left[y][x] == 0)
+				if(right[y][x] == 0)
 					continue;
 
 				currMin = 100;
 				//int minI = 0;
 
 				// po mozliwych nrOfDisp
-				rawDispImage[y][x] = 0;
+				//rawDispImage[y][x-realDiffBetween] = 200;
+				
 				for(int i = -halfDisp; (i < halfDisp) && (x+i+realDiffBetween < 640); ++i){
 					
-					if(right[y][x+i+realDiffBetween] == 0)
+					if(left[y][x+i+realDiffBetween] == 0)
 						continue;
 
-					currVal = left[y][x+realDiffBetween]-right[y][x+i+realDiffBetween];
+					currVal = right[y][x]-left[y][x+i+realDiffBetween];
 					if(currVal < currMin){
 						currMin = currVal;
-						rawDispImage[y][x+realDiffBetween] = i+realDiffBetween;
+						rawDispImage[y][x] = i+realDiffBetween;
 						//minI = i;
 					}
 				}
 			}
 		}
-		/*
-		cvAddS(andImage, cvScalar(halfDisp+realDiffBetween,0,0), andImage, blobs[0]);
-		*/
 		cvSmooth(andImage, andImage, CV_MEDIAN, myHandBMState.medianSmooth);
 	
-		cvSetImageROI(disparity, hands[0]->lastRect);
-		cvSetImageROI(blobs[0], hands[0]->lastRect);
-		cvSetImageROI(andImage, hands[0]->lastRect);
+		/*
+		cvSetImageROI(disparity, hands[1]->lastRect);
+		cvSetImageROI(blobs[1], hands[1]->lastRect);
+		cvSetImageROI(andImage, hands[1]->lastRect);
+		*/
 
-		CvScalar avgD = cvAvg(andImage, andImage);
+		//CvScalar avgD = cvAvg(andImage, andImage);
 		//cvSet(disparity, avgD, blobs[0]);
-		cvCopyImage(andImage, disparity);
 
-		cvResetImageROI(blobs[0]);
+
+		//cvCopyImage(andImage, disparity);
+
+		/*
+		cvResetImageROI(blobs[1]);
 		cvResetImageROI(andImage);
 		cvResetImageROI(disparity);
-
+		*/
 		// pokazmy sobie ta mape
 		//cvZero(rectifiedGray[0]);
 		//cvCopyImage(andImage, rectifiedGray[0]);
 
-		hands[0]->setLastPointWithZ(avgD.val[0]);
-		hands[1]->setLastPointWithZ(avgD.val[0]);
+		//hands[0]->setLastPointWithZ(avgD.val[0]);
+		//hands[1]->setLastPointWithZ(avgD.val[0]);
 		
 	}
 	else if(type == MINE_RND_){
