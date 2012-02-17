@@ -272,15 +272,18 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		cvResetImageROI(andImage);
 		
 		int diff = (hands[1]->lastRect.x+hands[1]->lastRect.width/2 - hands[0]->lastRect.x-hands[0]->lastRect.width/2)+xplus;
-		//qDebug() << diff;
+		qDebug() << diff;
 		//int diff = abs(hands[0]->lastRect.x+xplus - hands[1]->lastRect.x);
 
 		cvSetImageROI(disparity, hands[0]->lastRect);
 		cvSetImageROI(blobs[0], hands[0]->lastRect);
 
 		//diff = diff*255.0f/64.0f;
+		int color = 255 - (diff+128);
+		if(color < 0)	color = 0;
+		if(color > 255) color = 255;
 
-		cvSet(disparity, cvScalarAll(diff*255.0f/64.0f), blobs[0]);
+		cvSet(disparity, cvScalarAll(color), blobs[0]);
 		cvResetImageROI(blobs[0]);
 		cvResetImageROI(disparity);
 
@@ -445,11 +448,13 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 				counter++;
 				int diff = -(kpts_2[match.trainIdx].pt.x - kpts_1[match.queryIdx].pt.x);
 				dispAll += diff;
+				/*
 				Point2f p = kpts_2[match.trainIdx].pt;
 				cvSetImageROI(disparity, cvRect(	hands[0]->lastRect.x + (p.x-3 > 0 ? p.x-3 : p.x), 
 													hands[0]->lastRect.y + (p.y-3 > 0 ? p.y-3 : p.y), 6, 6));
 				cvSet(disparity, cvScalarAll(diff+alldiff));
 				cvResetImageROI(disparity);
+				*/
 			}
 		}
 
@@ -460,6 +465,11 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 		int disp = dispAll/counter;
 		disp += alldiff;
 
+		int color = 255 - (disp+128);
+		if(color < 0)	color = 0;
+		if(color > 255) color = 255;
+
+		cvSet(disparity, cvScalarAll(color), blobs[0]);
 
 		//cvSet(disparity, cvScalarAll(disp*255.0f/64.0f), blobs[0]);
 		hands[0]->setLastPointWithZ(disp);

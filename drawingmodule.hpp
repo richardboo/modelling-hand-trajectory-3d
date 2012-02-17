@@ -1,6 +1,9 @@
 #pragma once
 
-#include <cv.h>
+#include <opencv/cv.h>
+#include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include "blob.hpp"
 
 class DrawingModule{
@@ -16,6 +19,7 @@ public:
 	void drawDispOnFrame(int disp, IplImage * dispIm, IplImage * dispToShow);
 	void drawMiddleOnFrame(Blob * hand, IplImage * frame);
 	void drawTrajectoryOnFrame(Blob * hand, IplImage * frame);
+	void drawPointsOnDisp(IplImage * disparityToShow, std::vector<cv::Point2f> & mpts_1, Blob * hand);
 
 private:
 	CvFont font;

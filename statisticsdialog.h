@@ -24,6 +24,7 @@ public:
 	int timeProcess;
 	int framesProcess;
 	int framesProper;
+	float counterPoints;
 
 	double timeSkin;
 	double timeStereo;

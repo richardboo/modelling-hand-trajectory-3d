@@ -167,6 +167,7 @@ private:
 	double skinTime;
 	int counterSkin;
 	double stereoTime;
+	int counterPoints;
 
 	// zmienne pomocnicze do liczenia czasu
 	time_t tempStart;
