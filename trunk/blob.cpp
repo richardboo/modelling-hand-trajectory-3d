@@ -86,3 +86,9 @@ void Blob::setLastPointWithZ(int z){
 	allXYZ.push_front(lastXYZ);
 	lastZ = z;
 }
+
+void Blob::setRealPoint(float x, float y, float z){
+	
+	allXYZReal.push_back(cvPoint3D32f(x, y, z));
+
+}

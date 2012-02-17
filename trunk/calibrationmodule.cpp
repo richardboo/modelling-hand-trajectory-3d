@@ -26,10 +26,12 @@ CalibrationModule::~CalibrationModule(void){
 }
 
 
-void CalibrationModule::calibrationStart(int cornersX,int cornersY, int max){
+void CalibrationModule::calibrationStart(int cornersX,int cornersY, int max, double realSize){
     this->cornersX = cornersX;
     this->cornersY = cornersY;
 	maxSamples = max;
+
+	squareSize = (float) realSize;
 
 	boardSize = cvSize(cornersX, cornersY);
     this->cornersN = cornersX*cornersY;
@@ -68,7 +70,7 @@ int CalibrationModule::calibrationEnd(){
 
     int succeses = 0;
 	sampleCount = 0;
-	int squareSize = 2.1f;
+	//int squareSize = 2.1f;
 
 	for(int j = 0; j < leftImages.size(); ++j){
 	
@@ -381,6 +383,8 @@ void CalibrationModule::setRealCoordinates(Blob * hands[2]){
 	z = z/w;
 
 	hands[0]->lastDisp = z;
+	hands[0]->setRealPoint(x, y, z);
+
 	//qDebug() << "real: " << x << y << z;
 	/*
 

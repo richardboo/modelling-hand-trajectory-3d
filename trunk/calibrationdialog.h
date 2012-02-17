@@ -20,6 +20,7 @@ public:
 	int getBoardSize1(){	return boardSize1;	}
 	int getBoardSize2(){	return boardSize2;	}
 	int getSampleCounter(){	return sampleCounter;	}
+	double getRealSize() {	return realSize;}
 
 public slots:
 	void endCalibration();
@@ -33,6 +34,7 @@ private:
 
 	int boardSize1, boardSize2;
 	int sampleCounter;
+	double realSize;
 	CalibrationModule * calibModule;
 	
 
@@ -43,6 +45,7 @@ private slots:
 	void boardSizeChanged1(int newOne);
 	void boardSizeChanged2(int newOne);
 	void samplesCounterChanged(int newOne);
+	void realSizeChanged(double newOne);
 
 signals:
 	void calibrationStartFromDialog();

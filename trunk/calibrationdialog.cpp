@@ -39,9 +39,15 @@ void CalibrationDialog::initUI(){
 	connect(ui.spinBoxCalibrationSamples,	SIGNAL(valueChanged(int)),
 			this,							SLOT(samplesCounterChanged(int)));
 
+	connect(ui.realSizeSpinBox,				SIGNAL(valueChanged(double)),
+			this,							SLOT(realSizeChanged(double)));
+
+	
+
 	boardSize1 = ui.spinBoxCalibrationBoard1->value();
 	boardSize2 = ui.spinBoxCalibrationBoard2->value();
 	sampleCounter = ui.spinBoxCalibrationSamples->value();
+	realSize = ui.realSizeSpinBox->value();
 }
 
 void CalibrationDialog::init(CalibrationModule * module){
@@ -99,4 +105,8 @@ void CalibrationDialog::boardSizeChanged1(int newOne){
 
 void CalibrationDialog::boardSizeChanged2(int newOne){
 	boardSize2 = newOne;
+}
+
+void CalibrationDialog::realSizeChanged(double newOne){
+	realSize = newOne;
 }

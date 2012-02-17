@@ -27,6 +27,7 @@ private:
     int imageWidth;
     int imageHeight;
 	int maxSamples;
+	float squareSize;
 
     vector<CvPoint2D32f> ponintsTemp[2];
     vector<CvPoint3D32f> objectPoints;
@@ -49,7 +50,7 @@ public:
 
 	//IplImage * r, *g, * b, *black;
 
-    void calibrationStart(int cornersX, int cornersY, int max);
+    void calibrationStart(int cornersX, int cornersY, int max, double realSize);
     int calibrationAddSample(IplImage* imageLeft, IplImage* imageRight);
     int calibrationEnd();
 
