@@ -65,6 +65,7 @@ ProcessingThread::ProcessingThread(QObject *parent)
 	endTime			  = 0;
 	ticksPerSecond	  = 0;
 	timeAtGameStart   = 0;
+	counterPoints		= 0;
 
 	startProcessTime = 0;
 	endProcessTime = 0;
@@ -360,7 +361,7 @@ bool ProcessingThread::mainLoop(){
 				duringRecognition = true;
 				time(&startProcessTime);
 			}
-			framesProcessingCounter++;
+			
 			time(&tempStart);
 /////////////////////////////////////////////////
 
@@ -370,6 +371,7 @@ bool ProcessingThread::mainLoop(){
 				stereoModule->stereoProcessMine(frameGray, frameBlob, hand, disparity, stereoAlg);
 	
 //////////////// STAT ///////////////////////////
+			framesProcessingCounter++;
 			time(&tempEnd);
 			stereoTime += difftime(tempEnd, tempStart);
 /////////////////////////////////////////////////
@@ -378,6 +380,10 @@ bool ProcessingThread::mainLoop(){
 			cvResize(disparity, disparitySmaller);
 			//STEREO
 			drawingModule->drawDispOnFrame(hand[0]->lastDisp, disparitySmaller, disparityToShow);
+			if(stereoAlg == MINE_RND_){
+				drawingModule->drawPointsOnDisp(disparityToShow, stereoModule->mpts_1, hand[0]);
+				counterPoints += stereoModule->mpts_1.size();
+			}
 			
 
 		}else{
@@ -643,6 +649,10 @@ bool ProcessingThread::checkIfStart(){
 // zakladam, ze timer zostal zatrzymany
 void ProcessingThread::makeEverythingStop(){
 
+	if(endProcessTime == 0){
+		time(&endProcessTime);
+	}
+
 	bool cal = getCalibration();
 	// nagranie
 	if(processType == CAMERA && !cal){
@@ -818,12 +828,14 @@ void ProcessingThread::storeStatistics(){
 
 	statisticsDialog->timeProcess = (int)difftime(endProcessTime, startProcessTime);
 	statisticsDialog->framesProcess = framesStartStopCounter;
-	statisticsDialog->framesProper = framesProcessingCounter;
+	statisticsDialog->framesProper = framesProcessingCounter > framesStartStopCounter ? framesStartStopCounter : framesProcessingCounter;
 
 	statisticsDialog->timeSkin = skinTime*1000.0f/(float)counterSkin;
 	statisticsDialog->timeStereo = stereoTime*1000.0f/(float)framesProcessingCounter;
 
 	statisticsDialog->trajectory = saveTrajectory(fileDir.absolutePath()+"/");
+
+	statisticsDialog->counterPoints = (float)counterPoints/(float)framesProcessingCounter;
 	
 	statisticsDialog->showStatistics();
 	saveStatistics(fileDir.absolutePath()+"/");
@@ -927,6 +939,7 @@ bool ProcessingThread::reinitAll(){
 	skinTime = 0;
 	counterSkin = 0;
 	stereoTime = 0;
+	counterPoints = 0;
 
 	framesStartStopCounter = 0;
 	framesProcessingCounter = 0;

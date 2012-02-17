@@ -44,9 +44,13 @@ void StatisticsDialog::showStatistics(){
 		stats += "Procent poprawny: \t0%\n\n" ;
 
 	stats += "Segmentacja dloni (avg): \t" + QString::number(timeSkin) + "ms\n";
-	stats += "Stereo dopasowanie (avg): \t" + QString::number(timeStereo) + "ms\n\n";
+	stats += "Stereo dopasowanie (avg): \t" + QString::number(timeStereo) + "ms\n";
 
-	stats += "..ZAPIS..\n\n";
+	if(Settings::instance()->stereoAlg == MINE_RND_){
+		stats += "Znalezionych punktow dopasowania: \t" + QString::number(counterPoints) + "\n";
+	}
+
+	stats += "\n..ZAPIS..\n\n";
 	stats += "Film1: " + (file1.isEmpty() ? "(brak)" : file1.mid(file1.lastIndexOf("/")+1))+"\n";
 	stats += "Film2: " + (file2.isEmpty() ? "(brak)" : file2.mid(file2.lastIndexOf("/")+1))+"\n";
 	stats += "Kalibracja: " + (calibration.isEmpty() ? "(brak)" : calibration.mid(calibration.lastIndexOf("/")+1))+"\n";
@@ -113,7 +117,6 @@ QString StatisticsDialog::getStats(){
 			stats += "featuresNr:\t" +  QString::number(StereoModule::fastState.featuresNr		 ) + "\n";
 
 			break;
-	
 	}
 
 

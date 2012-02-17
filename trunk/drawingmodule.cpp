@@ -4,6 +4,7 @@
 #include <qDebug>
 
 using namespace std;
+using namespace cv;
 
 DrawingModule::DrawingModule(){
 	font = cvFont(1.5, 2); 
@@ -34,8 +35,9 @@ void DrawingModule::drawDispOnFrame(int disp, IplImage * dispIm, IplImage * disp
 
 	cvSet(dispToShow, cvScalar(0, green, red), dispIm);
 */
+	cvCvtColor(dispIm, dispToShow, CV_GRAY2BGR);
 	sprintf(strInt, "odleglosc: %d cm", disp);
-	cvPutText(dispIm, strInt, cvPoint(30, 30), &font, cvScalar(255, 255, 255));
+	cvPutText(dispToShow, strInt, cvPoint(30, 30), &font, cvScalar(255, 255, 255));
 }
 
 void DrawingModule::drawRectOnFrame(CvRect & rect, IplImage * frame){
@@ -81,18 +83,16 @@ void DrawingModule::drawTrajectoryOnFrame(Blob * hand, IplImage * frame){
 		if(point.x <= 0){
 			return;
 		}
-/*
-		int red, green;
-		int middle = 128 - point.z;
-
-		if(middle <= 0){
-			green = 255 - 2*abs(middle);
-			red = 255 - abs(middle);
-		}else{
-			red = 255 - 2*abs(middle);
-			green =  255 - abs(middle);
-		}
-*/
 		cvCircle(frame, cvPoint(point.x/2, point.y/2), 2, cvScalarAll(255), 2);
 	//}
+}
+
+void DrawingModule::drawPointsOnDisp(IplImage * frame, std::vector<Point2f> & mpts_1, Blob * hand){
+
+	for(int i = 0; i < mpts_1.size(); ++i){
+
+		Point2f point = mpts_1[i];
+		cvCircle(frame, cvPoint(point.x/2+hand->lastRect.x/2, point.y/2+hand->lastRect.y/2), 2, cvScalar(0, 0, 255), 2);
+	}
+
 }
