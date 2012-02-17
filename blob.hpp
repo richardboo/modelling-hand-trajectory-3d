@@ -14,9 +14,11 @@ public:
 
 	void setLastRect(CvRect & rect);
 	void setLastPointWithZ(int z);
+	void setRealPoint(float x, float y, float z);
 
 	std::vector<CvRect> allRect;
 	std::deque<CvPoint3D32f> allXYZ;
+	std::deque<CvPoint3D32f> allXYZReal;
 
 	CvRect lastRect;
 	int lastDisp;

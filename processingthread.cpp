@@ -415,7 +415,7 @@ bool ProcessingThread::mainLoop(){
 				IplImage * copy3 = cvCloneImage(frameRectified[i]);
 				bufferRectified[i].push_back(copy3);
 			}
-			IplImage * copy4 = cvCloneImage(disparity);
+			IplImage * copy4 = cvCloneImage(disparitySmaller);
 			bufferDepth.push_back(copy4);
 		}
 /////////////////////////////////////////////////
@@ -680,7 +680,8 @@ void ProcessingThread::makeEverythingStart(){
 		// USTAWIENIA KALIBRACJI
 		calibModule->calibrationStart(	calibDialog->getBoardSize1(),
 										calibDialog->getBoardSize2(),
-										calibDialog->getSampleCounter());
+										calibDialog->getSampleCounter(),
+										calibDialog->getRealSize());
 	}
 	reinitAll();
 	emit startedProcess();
@@ -859,20 +860,20 @@ QString ProcessingThread::saveTrajectory(QString file){
 		in << "\n";
 
 		// ilosc punktow
-		in << hand[0]->allXYZ.size();
+		in << hand[0]->allXYZReal.size();
 		in << "\n";
 
 		//for(int k = 0; k < 1; ++k){
-		for(int i = 0; i < hand[0]->allXYZ.size(); ++i){
+		for(int i = 0; i < hand[0]->allXYZReal.size(); ++i){
 			
-			if(	hand[0]->allXYZ[i].x >= -1 && 
-				hand[0]->allXYZ[i].y >= -1 &&
-				hand[0]->allXYZ[i].z >= -1){
+			//if(	hand[0]->allXYZReal[i].x >= -1 && 
+			//	hand[0]->allXYZReal[i].y >= -1 &&
+			//	hand[0]->allXYZReal[i].z >= -1){
 
-				in << hand[0]->allXYZ[i].x <<",";
-				in << hand[0]->allXYZ[i].y <<",";
-				in << hand[0]->allXYZ[i].z <<"\n";
-			}
+				in << hand[0]->allXYZReal[i].x <<",";
+				in << hand[0]->allXYZReal[i].y <<",";
+				in << hand[0]->allXYZReal[i].z <<"\n";
+			//}
 			//qDebug() << hand[0]->allXYZ[i].x;
 			//qDebug() << hand[0]->allXYZ[i].y;
 			//qDebug() << hand[0]->allXYZ[i].z;

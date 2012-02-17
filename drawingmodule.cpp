@@ -34,7 +34,7 @@ void DrawingModule::drawDispOnFrame(int disp, IplImage * dispIm, IplImage * disp
 
 	cvSet(dispToShow, cvScalar(0, green, red), dispIm);
 */
-	sprintf(strInt, "odleglosc: %d", disp);
+	sprintf(strInt, "odleglosc: %d cm", disp);
 	cvPutText(dispIm, strInt, cvPoint(30, 30), &font, cvScalar(255, 255, 255));
 }
 
