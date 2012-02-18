@@ -381,7 +381,7 @@ bool ProcessingThread::mainLoop(){
 			//STEREO
 			drawingModule->drawDispOnFrame(hand[0]->lastDisp, disparitySmaller, disparityToShow);
 			if(stereoAlg == MINE_RND_){
-				drawingModule->drawPointsOnDisp(disparityToShow, stereoModule->mpts_1, hand[0]);
+				drawingModule->drawPointsOnDisp(disparityToShow, stereoModule->mpts_2, hand[1]);
 				counterPoints += stereoModule->mpts_1.size();
 			}
 			
@@ -421,7 +421,7 @@ bool ProcessingThread::mainLoop(){
 				IplImage * copy3 = cvCloneImage(frameRectified[i]);
 				bufferRectified[i].push_back(copy3);
 			}
-			IplImage * copy4 = cvCloneImage(disparitySmaller);
+			IplImage * copy4 = cvCloneImage(disparityToShow);
 			bufferDepth.push_back(copy4);
 		}
 /////////////////////////////////////////////////
