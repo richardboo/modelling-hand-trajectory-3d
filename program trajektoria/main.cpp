@@ -104,6 +104,7 @@ bool loadFile(){
 		TrajectorySample * newSample = new TrajectorySample;
 		newSample->loadSample(file);
 		file.close();
+		newSample->fileName = szFile;
 
 		samples.push_back(newSample);
 		currentSampleIndex = samples.size()-1;
@@ -117,6 +118,7 @@ bool loadFile(){
 		trajFactory.fitModelTrajectories(newSample);
 		newSample->recognize();
 		newSample->showStats();
+		newSample->saveStats();
 		newSample->isReady = true;
 
 		return true;

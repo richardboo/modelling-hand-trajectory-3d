@@ -351,7 +351,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 			
 				if(zero[y][x] == 0)
 					continue;
-				rawDispImage[y+hands[0]->lastRect.y][x+hands[0]->lastRect.x] = realDiffBetween+128;
+				rawDispImage[y+hands[1]->lastRect.y][x+hands[1]->lastRect.x] = realDiffBetween+128;
 				
 				currMin = 100;
 
@@ -364,7 +364,7 @@ void StereoModule::stereoProcessMine(IplImage* rectifiedGray[2], IplImage * blob
 					if(currVal < currMin){
 						currMin = currVal;
 						//qDebug() << i;
-						rawDispImage[y+hands[0]->lastRect.y][x+hands[0]->lastRect.x] = i+realDiffBetween+128;
+						rawDispImage[y+hands[1]->lastRect.y][x+hands[1]->lastRect.x] = i+realDiffBetween+128;
 					}
 				}
 			}

@@ -194,9 +194,9 @@ void ModelTrajectoryFactory::createZigZag(vector<Point3D> & vect,Point3D & maxZ,
 		currZ+=zdiff;
 	}
 
-	divide = (float)count-divide;
+	//divide = (float)count-divide;
 	if(divide == 0)	divide = 1.0f;
-	diffX = (maxX.x-minX.x)/divide;
+	diffX = (maxX.x-minX.x)/((float)count-divide);
 	currX = maxX.x;
 
 	// x maleje
@@ -220,9 +220,19 @@ void ModelTrajectoryFactory::createArc(vector<Point3D> & vect,Point3D & maxZ, Po
 	float divider = 3.14159265f/180.f;
 	float radius = ((maxZ.z-minZ.z)/2.0f + (maxY.y-minY.y)/2.0f)/2.0f;
 
+	float plusY, plusZ;
+	if(maxZ.z-minZ.z > maxY.y-minY.y){
+		plusY = 0.0f;
+		plusZ = ((maxZ.z-minZ.z)/2.0f - radius)/(float)count;
+	}
+	else{
+		plusY = ((maxY.y-minY.y)/2.0f - radius)/(float)count;
+		plusZ = 0.0f;
+	}
+
 	for(int i = 0; i < count; ++i){
 		rad = angle*divider;
-		vect.push_back(Point3D(x, cos(rad)*radius+y, sin(rad)*radius+z));
+		vect.push_back(Point3D(x, cos(rad)*radius+y+plusY*i, sin(rad)*radius+z+plusZ*i));
 		angle += angleDiff;
 	}
 

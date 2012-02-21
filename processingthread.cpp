@@ -859,7 +859,9 @@ void ProcessingThread::saveStatistics(QString file){
 
 QString ProcessingThread::saveTrajectory(QString file){
 	
-	QFile fileTrj(file+"traj.trj");
+	QString newFile = file;
+	newFile.chop(1);
+	QFile fileTrj(newFile+"_traj.trj");
 
 	if (fileTrj.open(QIODevice::WriteOnly)){
 
