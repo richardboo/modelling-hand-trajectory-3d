@@ -309,6 +309,7 @@ void MgrStereoHand::setUIstartEnabled(bool enable){
 	ui.groupBoxCalibration->setEnabled(!enable);
 	ui.groupBoxFilm->setEnabled(!enable);
 	ui.buttonStop->setEnabled(enable);
+	//algorithmsDialog->setEnabled(!enable);
 }
 
 void MgrStereoHand::calibrateButtonClicked(){

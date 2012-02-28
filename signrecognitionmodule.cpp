@@ -96,6 +96,6 @@ bool SignRecognitionModule::isSign(IplImage * bwImage, CvRect & rect){
 	cvReleaseImage(&contour);
 	cvResetImageROI(bwImage);
 
-	//return (diff <= 8.0);
-	return false;
+	return (diff <= 8.0);
+	//return false;
 }

@@ -35,7 +35,7 @@ bool CameraDevice::init(int width, int height){
 	this->height = height;
 
 	vi.setupDevice(id, width, height);
-	vi.showSettingsWindow(id);
+	//vi.showSettingsWindow(id);
 
 	if(!vi.isDeviceSetup(id))
 		return false;
