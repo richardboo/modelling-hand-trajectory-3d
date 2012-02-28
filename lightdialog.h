@@ -9,6 +9,9 @@
 
 #include "ui_lightdialog.h"
 
+/**
+ * Okno dialogowe wyboru rodzaju swiatla na przetwarzanych filmach (tylko do celow statystycznych).
+ */
 class LightDialog : public QDialog
 {
 	Q_OBJECT

@@ -3,6 +3,10 @@
 #include <cv.h>
 #include <deque>
 
+/**
+ * Klasa reprezentujaca obiekt polaczony wykryty na obrazie.
+ * Zawiera wektor ostatnich polozen.
+ */
 class Blob
 {
 public:

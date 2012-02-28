@@ -1,5 +1,8 @@
 #pragma once
 
+/**
+ * Klasa z parametrami algorytmu FAST Feature Matching.
+ */
 class FastStereoState
 {
 public:

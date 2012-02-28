@@ -26,6 +26,7 @@
 #include "drawingmodule.hpp"
 #include "statisticsdialog.h"
 
+// pomocnicze stany przetwarzania/inicjalizacji dla algorytmow wykorzystujacy histogram lub elimiacje tla
 #define STATE_BEFORE_HIST 0
 #define STATE_AFTER_HIST 1
 
@@ -33,6 +34,21 @@
 #define STATE_BACK 1
 #define STATE_AFTER_BACK 2
 
+/**
+ * Glowny watek przetwarzania.
+ * Realizowany w dwoch trybach: 
+ *   - idle - kiedy nie jest rozpoczete przetwarzania, wysiwetla obraz z kamer (jesli sa dostepne),
+ *   - main - nastepuje przetwarzanie obrazow z wybranym algorytmem stereo dopasowania i algorytmem rozpoznawania skory
+ * Przetwarzanie w glownej petli obejmuje:
+ *   - pobranie obrazow,
+ *   - rektyfikacje obrazow,
+ *   - inicjalizacje specyficznych cech algorytmow (update histogramu twarzy lub obliczenie i uaktualnienie tla),
+ *   - wykrywanie skory na obrazach (rownolegle na dwoch procesorach, jesli sa dostepne),
+ *   - segmentacja dloni (rownolegle),
+ *   - rozpoznawanie znaku rozpoczecia/zakonczenia pobierania trajektorii (rownolegle)
+ *   - stereo dopasowanie, jesli przetwarzanie jest w fazie pobierania trajektorii
+ *   - wyliczenie prawdziwej odleglosci od kamery
+ */
 class ProcessingThread : public QObject
 {
 	Q_OBJECT

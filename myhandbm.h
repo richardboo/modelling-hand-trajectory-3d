@@ -1,5 +1,8 @@
 #pragma once
 
+/**
+ * Klasa z parametrami algorytmu Pixel Matching.
+ */
 class MyHandBM
 {
 public:

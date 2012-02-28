@@ -5,7 +5,10 @@
 
 #include "blob.hpp"
 
-
+/**
+ * Modul segmentacji dloni z obrazu z wykrytymi obszarami skory.
+ * Wykorzystuje znana poprzednia pozycje dloni oraz pozycje glowy (jesli zostala wykryta).
+ */
 class HandDetector{
 public:
 	HandDetector();

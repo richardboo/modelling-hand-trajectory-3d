@@ -3,6 +3,10 @@
 #include "histogram.hpp"
 #include "blob.hpp"
 
+/*
+ * Modul wykrywania skory dloni.
+ * Zawiera implementacje kilku algorytmow.
+ */
 class SkinDetector
 {
 public:

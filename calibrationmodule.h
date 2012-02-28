@@ -10,7 +10,11 @@
 
 #include "blob.hpp"
 
-
+/**
+ * Modul odpowiadajacy za kalibracje ukladu kamer. 
+ * Przeprowadza kalibracje na dodanych probkach zdjec szachownicy.
+ * Przechowuje parametry konieczne do rektyfikacji obrazu i wyliczenia odleglosci rzeczywistej od kamer.
+ */
 class CalibrationModule: public QObject
 {
 	Q_OBJECT

@@ -18,6 +18,10 @@
 using namespace std;
 using namespace cv; 
 
+/**
+ * Modul implementujacy kilka algorytmow stereo dopasowania.
+ * W glownej metodzie zwraca mape dysparycji i ustawia ostatnie polozenie dloni.
+ */
 class StereoModule
 {
 public:

@@ -38,6 +38,10 @@
 #define VIDEO 2
 #define CAMERA 0
 
+/**
+ * Singleton ustawien programu.
+ * Wykorzystywany przez wiele klas w programie do zmian parametrow, np. wyboru algorytmow.
+ */
 class Settings
 {
 

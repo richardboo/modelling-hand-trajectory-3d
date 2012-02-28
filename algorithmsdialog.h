@@ -14,6 +14,9 @@
 #include "fastdialog.h"
 #include "pixeldialog.h"
 
+/**
+ * Okno dialogowe z wyborem algorytmow wykrywania skory i algorytmow stereo dopasowania.
+ */
 class AlgorithmsDialog : public QDialog
 {
 	Q_OBJECT

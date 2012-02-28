@@ -6,6 +6,9 @@
 
 #include "calibrationmodule.h"
 
+/**
+ * Okno dialogowe ze zmianami parametrow kalibracji ukladu kamer.
+ */
 class CalibrationDialog : public QDialog
 {
 	Q_OBJECT

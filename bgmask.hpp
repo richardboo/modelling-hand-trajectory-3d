@@ -3,6 +3,9 @@
 #include <cv.h>
 //#include <opencv2/video/background_segm.hpp>
 
+/**
+ * Klasa tworzaca maske tla i pierwszego planu.
+ */
 class BGMask
 {
 public:

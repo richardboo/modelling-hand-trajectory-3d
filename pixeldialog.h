@@ -4,6 +4,9 @@
 #include <QDialog>
 #include "ui_pixeldialog.h"
 
+/**
+ * Okno dialogowe zmian parametrow algorytmu Pixel Matching.
+ */
 class PixelDialog : public QDialog
 {
 	Q_OBJECT

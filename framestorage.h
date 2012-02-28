@@ -2,7 +2,9 @@
 
 #include <cv.h>
 
-// aktualnie przetwarzana ramka i jej odpowiedniki (mniejsze, szare itp)
+/*
+ * Klasa przechowujaca aktualnie przetwarzana ramka i jej odpowiedniki (mniejsze, szare itp)
+ */
 class FrameStorage
 {
 public:

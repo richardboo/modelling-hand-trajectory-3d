@@ -20,6 +20,7 @@
 
 #include "calibrationmodule.h"
 
+// pomocnicze stany przetwarzania/inicjalizacji dla algorytmow wykorzystujacy histogram lub elimiacje tla
 #define STATE_BEFORE_HIST 0
 #define STATE_AFTER_HIST 1
 
@@ -27,6 +28,12 @@
 #define STATE_BACK 1
 #define STATE_AFTER_BACK 2
 
+/**
+ * Glowne okno aplikacji, jest rodzicem dla pozostalych okien dialogowych.
+ * Rozpoczyna i konczy watek przetwarzania.
+ * Odpowiada za ustawienie odpowiedniego zrodla przetwarzania: wideo lub kamery.
+ * Ustawia odpowiednie wyswietlanie przetwarzanych obrazow.
+ */
 class MgrStereoHand : public QMainWindow
 {
 	Q_OBJECT

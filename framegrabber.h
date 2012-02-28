@@ -3,6 +3,10 @@
 #include <cv.h>
 #include <highgui.h>
 
+/**
+ * Klasa abstrakcyjna.
+ * Zawiera interfejs obiektu pobierania klatek obrazu, np. kamery lub filmu wideo.
+ */
 class FrameGrabber
 {
 public:

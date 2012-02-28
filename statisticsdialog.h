@@ -5,6 +5,9 @@
 #include <QString>
 #include "ui_statisticsdialog.h"
 
+/**
+ * Okno dialogowe do wyswietlania statystyk przetwarzania.
+ */
 class StatisticsDialog : public QDialog
 {
 	Q_OBJECT

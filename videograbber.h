@@ -7,6 +7,9 @@
 
 #include "framegrabber.h"
 
+/**
+ * Obiekt obslugujacy pobieranie klatek z filmu wideo.
+ */
 class VideoGrabber: public FrameGrabber
 {
 public:

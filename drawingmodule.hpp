@@ -6,6 +6,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "blob.hpp"
 
+/**
+ * Pomocniczy modul rysujacy odpowiednie elementy na wskazanej ramce obrazu.
+ */
 class DrawingModule{
 public:
 	DrawingModule();

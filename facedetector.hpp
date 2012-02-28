@@ -3,6 +3,10 @@
 #include <cv.h>
 #include "blob.hpp"
 
+/**
+ * Modul rozpoznawania twarzy.
+ * Wykorzystuje algorytm Haar'a i dane z pliku haarcascade_frontalface_alt.xml.
+ */
 class FaceDetector{
 public:
 	FaceDetector();
