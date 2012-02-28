@@ -61,6 +61,8 @@ private slots:
 	void bmChanged();
 	void sgbmChanged();
 	void cudaChanged();
+
+	void manualChanged(int newOne);
 };
 
 #endif // ALGORITHMSDIALOG_H

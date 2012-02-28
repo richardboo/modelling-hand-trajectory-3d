@@ -315,7 +315,7 @@ bool ProcessingThread::mainLoop(){
 			handNotFound[i] = handDetection[i]->findHand(frameSkin[i], frameBlob[i], frame[i], rect, *hand[i], *head[i]);
 			
 			if(!handNotFound[i]){
-				bool start = srModule->isSign(frameBlob[i], hand[i]->lastRect);
+				bool start = Settings::instance()->manual ? false : srModule->isSign(frameBlob[i], hand[i]->lastRect);
 
 				if(start && startRecognized[i] != 1){
 					startRecognized[i]++;
@@ -350,8 +350,7 @@ bool ProcessingThread::mainLoop(){
 			framesStartStopCounter++;
 		}
 /////////////////////////////////////////////////
-		//stereoModule->stereoProcessGray(frameGray, frameBlob, hand, disparity, stereoAlg);
-		//cvResize(disparity, disparitySmaller);
+
 
 		if(!handNotFound[0] && !handNotFound[1] && (startRecognized[0] == 2)){
 

@@ -47,8 +47,8 @@ void AlgorithmsDialog::initUI(){
 	connect(ui.sgbmParamsButton,	SIGNAL(clicked()),
 			this,				SLOT(showSGBMParamsClicked()));
 	
-	connect(ui.cudaParamsButton,	SIGNAL(clicked()),
-			this,				SLOT(showCUDAParamsClicked()));
+	//connect(ui.cudaParamsButton,	SIGNAL(clicked()),
+	//		this,				SLOT(showCUDAParamsClicked()));
 
 	connect(ui.pixelParamsButton,	SIGNAL(clicked()),
 		this,				SLOT(showPixelParamsClicked()));
@@ -68,12 +68,17 @@ void AlgorithmsDialog::initUI(){
 	connect(ui.startStopTrajectoryButton,	SIGNAL(clicked()),
 		this,					SLOT(startStopTrajectoryClicked()));
 
+	connect(ui.manualCheckBox,	SIGNAL(stateChanged (int)),
+			this,				SLOT(manualChanged(int)));
+
+	Settings::instance()->manual = (ui.manualCheckBox->checkState() == Qt::Checked);
+
 	
 	// algorytmy stereo dopasowania
 	stereoGroup = new QButtonGroup(this);
 	stereoGroup->addButton(ui.radioButtonStereo0, 0);
 	stereoGroup->addButton(ui.radioButtonStereo1, 1);
-	stereoGroup->addButton(ui.radioButtonStereo2, 2);
+	//stereoGroup->addButton(ui.radioButtonStereo2, 2);
 	stereoGroup->addButton(ui.radioButtonStereo3, 3);
 	stereoGroup->addButton(ui.radioButtonStereo4, 4);
 	stereoGroup->addButton(ui.radioButtonStereo5, 5);
@@ -166,4 +171,9 @@ void AlgorithmsDialog::cudaChanged(){
 
 void AlgorithmsDialog::startStopTrajectoryClicked(){
 	Settings::instance()->changeTrajectory = true;
+}
+
+void AlgorithmsDialog::manualChanged(int newOne){
+	Settings::instance()->manual = (newOne == Qt::Checked);
+	ui.startStopTrajectoryButton->setEnabled(Settings::instance()->manual);
 }

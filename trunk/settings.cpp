@@ -16,6 +16,8 @@ Settings::Settings(void){
 	fileFilm0 = "";
 	fileFilm1 = "";
 	fileCalib = "";
+
+	manual = true;
 }
 
 Settings::~Settings(void)

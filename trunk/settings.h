@@ -108,6 +108,8 @@ public:
 	int light;
 	int bkg;
 
+	bool manual;
+
 	bool changeTrajectory;
 
 	QString fileFilm0;

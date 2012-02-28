@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>320</width>
-    <height>525</height>
+    <height>475</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -105,7 +105,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <widget class="QRadioButton" name="radioButtonStereo3">
         <property name="text">
          <string>Dopasowanie ROI</string>
@@ -115,42 +115,28 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QRadioButton" name="radioButtonStereo4">
         <property name="text">
          <string>Pixel Matching na ROI</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
-       <widget class="QRadioButton" name="radioButtonStereo5">
-        <property name="text">
-         <string>FAST Feature Points Matching</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QRadioButton" name="radioButtonStereo2">
-        <property name="text">
-         <string>Block Matching (OpenCV + CUDA)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="cudaParamsButton">
-        <property name="text">
-         <string>Parametry</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QPushButton" name="pixelParamsButton">
         <property name="text">
          <string>Parametry</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="4" column="0">
+       <widget class="QRadioButton" name="radioButtonStereo5">
+        <property name="text">
+         <string>FAST Feature Points Matching</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
        <widget class="QPushButton" name="fastParamsButton">
         <property name="text">
          <string>Parametry</string>
@@ -207,6 +193,16 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="manualCheckBox">
+     <property name="text">
+      <string>manualne oznaczenie początku i końca</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
