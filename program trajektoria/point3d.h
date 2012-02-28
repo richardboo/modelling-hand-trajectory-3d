@@ -1,5 +1,8 @@
 #pragma once
 
+/**
+ * Punkt w przestrzeni.
+ */
 class Point3D
 {
 public:

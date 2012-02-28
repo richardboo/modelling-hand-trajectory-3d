@@ -3,12 +3,16 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <iostream>
 
 #include "point3d.h"
 #include "modeltrajectory.h"
 #include "singletrajectory.h"
 
-
+/**
+ * Probka trajektorii. Zawiera pobrana trajektorie i wygladzone trajektorie.
+ */
 class TrajectorySample
 {
 public:
@@ -23,10 +27,12 @@ public:
 	SingleTrajectory kalman3Trajectory;
 
 	bool isReady;
-	float realIndex;
+	int realIndex;
 	float minZ, maxZ;
 	
 	std::string fileName;
+	std::stringstream statsStr;
+	//std::string statsStr;
 
 	void loadSample(std::ifstream & file);
 	void prepareAllTrajectories();

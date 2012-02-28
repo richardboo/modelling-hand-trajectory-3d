@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sstream>
+
+
 
 using namespace std;
 using namespace cv;
@@ -29,12 +32,27 @@ void TrajectorySample::loadSample(ifstream & file){
 	file >> w;
 	file >> h;
 	file >> count;
+	std::vector<Point3D> reversedTemp;
 
 	for(int i = 0; i < count && !file.eof(); ++i){
 		file >> x >> c >> y >> c >> z;
-		if(x != -1.0f && y != -1.0f && z!= -1.0f){
-			originalPoints.push_back(Point3D(x, y, z));
-		}
+		if(i < 5 || i >= count-5)
+			continue;
+		if(z < 0 || z > 200)
+			continue;
+		x *= 8.0f;
+		y *= 8.0f;
+		z *= 6.0f;
+
+		x = 150.0f-x;
+		y = 300.0f-y;
+		z -= 240.0f;
+		//if(x != -1.0f && y != -1.0f && z!= -1.0f){
+		reversedTemp.push_back(Point3D(x, y, z));
+		//}
+	}
+	for(int i = reversedTemp.size()-1; i >= 0; --i){
+		originalPoints.push_back(reversedTemp[i]);
 	}
 }
 
@@ -111,7 +129,7 @@ void TrajectorySample::filterSample(){
 		return;
 	}
 
-	cout << "przed usuwaniem co drugi: " << vectTemp.size() << endl;
+	//cout << "przed usuwaniem co drugi: " << vectTemp.size() << endl;
 
 	list<Point3D> temp2;
 	// usuwamy te, ktore sa za czesto
@@ -125,7 +143,7 @@ void TrajectorySample::filterSample(){
 	}
 	temp2.push_back(vectTemp[vectTemp.size()-1]);
 
-	cout << "po usuwaniu co drugi: " << temp2.size() << endl;
+	//cout << "po usuwaniu co drugi: " << temp2.size() << endl;
 
 	int tooMuch = temp2.size()-200;
 	list<Point3D>::iterator iter;
@@ -208,18 +226,37 @@ void TrajectorySample::smoothTrajectoryTwice(){
 
 void TrajectorySample::saveStats(){
 
+	ofstream file (fileName.append(".txt").c_str());
+
+    if(file.is_open()) {
+		file << statsStr.str();
+		file.close();
+	}
+/*
+	QString file = QString(filename).append(".txt");
+	QFile fileTrj(filePath);
+
+	if (fileTrj.open(QIODevice::WriteOnly)){
+
+		QTextStream in(&fileTrj);
+		in << statsStr;
+		fileTrj.close();
+	}
+*/
 }
 
 void TrajectorySample::showStats(){
 	
-	cout << "--Statystyki rozpoznawania--" << endl << endl;
-	cout << "* ilosc punktow oryginalnych:\t" << originalPoints.size() << endl;
-	cout << "* ilosc punktow przefiltrowanych:\t" << filteredTrajectory.points.size() << endl;
-	cout << endl;
-	cout << "PRZWDZIWA trajektoria:\t" << realIndex << endl;
-	cout << "ROZPOZNANA trajektoria:\t" << filteredTrajectory.recognizedIndex << ", " << kalmanTrajectory.recognizedIndex << ", " << kalman3Trajectory.recognizedIndex << endl;
-	cout << endl;
-	cout << "najmniejsza odleglosc dla rozpoznanej trajektorii:\t";
+	//statsStr = stringstream(stringstream::in | stringstream::out);
+
+	statsStr << "--Statystyki rozpoznawania--" << endl << endl;
+	statsStr << "* ilosc punktow oryginalnych:\t" << originalPoints.size() << endl;
+	statsStr << "* ilosc punktow przefiltrowanych:\t" << filteredTrajectory.points.size() << endl;
+	statsStr << endl;
+	statsStr << "PRAWDZIWA trajektoria:\t" << realIndex << endl;
+	statsStr << "ROZPOZNANA trajektoria:\t" << filteredTrajectory.recognizedIndex << ", " << kalmanTrajectory.recognizedIndex << ", " << kalman3Trajectory.recognizedIndex << endl;
+	statsStr << endl;
+	statsStr << "najmniejsza odleglosc dla rozpoznanej trajektorii:\t";
 
 	float minDiff = -1.0f;
 	int index = -1;
@@ -242,26 +279,28 @@ void TrajectorySample::showStats(){
 		}
 	}
 	if(minDiff > 0){
-		cout << (index == 0 ? "nie wygladzona" : (index == 1 ? "kalman" : "3x kalman")) << endl;
+		statsStr << (index == 0 ? "nie wygladzona" : (index == 1 ? "kalman" : "3x kalman")) << endl;
 	}
 	else{
-		cout << "brak rozpoznanej trajektorii" << endl;
+		statsStr << "brak rozpoznanej trajektorii" << endl;
 	}
 
-	cout << endl << "\t** NIE WYGLADZONA **" << endl;
+	statsStr << endl << "\t** NIE WYGLADZONA **" << endl;
 	showStatsForTrajectory(filteredTrajectory);
-	cout << endl << "\t** WYGLADZONA FILTREM KALMANA **"<<endl;
+	statsStr << endl << "\t** WYGLADZONA FILTREM KALMANA **"<<endl;
 	showStatsForTrajectory(kalmanTrajectory);
-	cout << endl << "\t** WYGLADZONA 3X FILTREM KALMANA **"<<endl;
+	statsStr << endl << "\t** WYGLADZONA 3X FILTREM KALMANA **"<<endl;
 	showStatsForTrajectory(kalman3Trajectory);
+
+	cout << statsStr.str();
 }
 
 void TrajectorySample::showStatsForTrajectory(SingleTrajectory & traj){
-	cout << "rozpoznana trajektoria:\t" << traj.recognizedIndex << endl;
-	cout << "\tmodel\tdiff"<<endl;
+	statsStr << "rozpoznana trajektoria:\t" << traj.recognizedIndex << endl;
+	statsStr << "\tmodel\tdiff"<<endl;
 	
 	for(unsigned int i = 0; i < traj.diffFittedModels.size(); ++i){
-		cout << "\t"<<ModelTrajectory::name[i]<<"\t"<<traj.diffFittedModels[i]<<endl;
+		statsStr << "\t"<<i<<" "<<ModelTrajectory::name[i]<<"\t"<< ((i == 0 || i == 4) ? "\t" : "") <<traj.diffFittedModels[i]<<endl;
 	}
 }
 
@@ -322,9 +361,10 @@ void TrajectorySample::recognizeSingleTraj(SingleTrajectory & traj){
 
 			Point3D & org = traj.points[i];
 			Point3D & fitted = curr->points[i];
-			float diff = abs(org.x-fitted.x) + abs(org.y-fitted.y) + abs(org.z-fitted.z);
+			float diff = (org.x-fitted.x)*(org.x-fitted.x) + (org.y-fitted.y)*(org.y-fitted.y) + (org.z-fitted.z)*(org.z-fitted.z);
 			traj.diffFittedModels[m] += diff;
 		}
+		traj.diffFittedModels[m] /= traj.points.size();
 
 		// wybor minimalnej
 		if(minIndex == -1 || traj.diffFittedModels[m] < min){
@@ -361,6 +401,8 @@ void TrajectorySample::smoothTrajectoryKalman(std::vector<Point3D> & original, s
     setIdentity(KF.processNoiseCov, Scalar::all(1e-4));
     setIdentity(KF.measurementNoiseCov, Scalar::all(1e-1));
     setIdentity(KF.errorCovPost, Scalar::all(5));
+
+	smoothed.push_back(point);
 
 	for(unsigned int i = 1; i < original.size() ;++i)
     {	

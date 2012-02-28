@@ -5,7 +5,11 @@
 #include "point3d.h"
 #include "trajectorysample.h"
 
-
+/**
+ * Fabryka modelowych trajekorii. 
+ * Tworzy trajektorie dopasowane do pobranej na podstawie punktow charakterystych.
+ * Generuje pokazowe modelowe trajektorie.
+ */
 class ModelTrajectoryFactory
 {
 public:
