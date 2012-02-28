@@ -9,6 +9,9 @@
 
 #include "ui_backgrounddialog.h"
 
+/**
+ * Okno dialogowe wyboru tla przetwarzanych filmow (tylko do celow statystycznych).
+ */
 class BackgroundDialog : public QDialog
 {
 	Q_OBJECT

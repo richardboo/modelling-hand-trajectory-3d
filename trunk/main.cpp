@@ -2,6 +2,9 @@
 #include "settings.h"
 #include <QtGui/QApplication>
 
+/**
+ * Glowna funckja apliakcji Qt.
+ */
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);

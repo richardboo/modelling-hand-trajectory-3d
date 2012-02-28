@@ -3,6 +3,9 @@
 #include <cv.h>
 #include <highgui.h>
 
+/**
+ * Klasa obudowujaca okno wysiwetlajace obraz z biblioteki OopenCV.
+ */
 class MyWindow{
 
 public:

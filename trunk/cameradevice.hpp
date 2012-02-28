@@ -6,7 +6,9 @@
 
 #include "framegrabber.h"
 
-
+/**
+ * Obiekt reprezentujacy pojedyncza kamere.
+ */
 class CameraDevice: public FrameGrabber
 {
 public:

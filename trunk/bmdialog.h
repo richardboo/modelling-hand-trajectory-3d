@@ -4,6 +4,9 @@
 #include <QDialog>
 #include "ui_bmdialog.h"
 
+/**
+ * Okno dialogowe zmian parametrow algorytmu BM.
+ */
 class BMDialog : public QDialog
 {
 	Q_OBJECT

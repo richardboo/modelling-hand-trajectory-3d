@@ -4,6 +4,9 @@
 
 using namespace cv;
 
+/**
+ * Obiekt histogramu HS przestrzeni HSV.
+ */
 class Histogram {
 
 public:

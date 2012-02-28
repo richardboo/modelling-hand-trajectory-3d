@@ -4,6 +4,9 @@
 #include <QDialog>
 #include "ui_sgbmdialog.h"
 
+/**
+ * Okno dialogowe zmian parametrow algorytmu SGBM.
+ */
 class SGBMDialog : public QDialog
 {
 	Q_OBJECT

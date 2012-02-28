@@ -2,6 +2,9 @@
 
 #include <cv.h>
 
+/**
+ * Narzedzia do tworzenia obrazow o okreslonych cechach.
+ */
 namespace ImageUtils{
 
 

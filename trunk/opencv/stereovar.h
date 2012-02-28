@@ -7,6 +7,9 @@
 
 using namespace cv;
 
+/**
+ * Algorytm StereoVar z biblioteki OpenCV.
+ */
 class StereoVar
     {
     public:

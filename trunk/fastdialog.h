@@ -4,6 +4,9 @@
 #include <QDialog>
 #include "ui_fastdialog.h"
 
+/**
+ * Okno dialogowe zmian parametrow algorytmu FAST Feature Matching.
+ */
 class FastDialog : public QDialog
 {
 	Q_OBJECT
