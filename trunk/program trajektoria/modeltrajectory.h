@@ -5,6 +5,9 @@
 
 #include "point3d.h"
 
+/**
+ * Modelowa trajektoria, zawiera punkty oraz index
+ */
 class ModelTrajectory
 {
 public:

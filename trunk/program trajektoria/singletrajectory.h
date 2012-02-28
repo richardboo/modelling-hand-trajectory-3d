@@ -5,6 +5,10 @@
 #include "point3d.h"
 #include "modeltrajectory.h"
 
+/**
+ * Pojedynczy obiekt trajektorii pobranej.
+ * Zawiera trajektorie pobrana, prawdziwy index, trajektorie modelowe dopasowe i wyniki rozpoznawania.
+ */
 class SingleTrajectory
 {
 public:

@@ -3,6 +3,8 @@
 #include <GL/glut.h>
 #include <GL/freeglut.h>
 #include <opencv2/video/tracking.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <highgui.h>
 #include <cv.h>
 #include <math.h>
 #include <stdio.h>
@@ -48,7 +50,7 @@ int testedTrajectory = 0;
 
 
 
-// opengl functions
+// opengl funkcje
 void keyUp (unsigned char key, int x, int y);
 void keyPressed (unsigned char key, int x, int y);
 void reshape (int width, int height);
@@ -59,15 +61,22 @@ void renderStrings();
 void mouseMovement(int x, int y);
 void mouseGo(int, int);
 
-
+// wczytanie pliku
 bool loadFile();
+// otwarcie pliku
 bool openFile();
+// wyswietlenie pomocy
 void showHelp();
+// zapis aktualnych statystyk
 void saveCurrentStat();
+// zapis wszystkich statystyk
 void saveAllStat();
+// rysuje trajektorie odpowiednim kolorem
 void drawTrajectoryWithColor(float r, float g, float b, vector<Point3D> & points);
 
-
+/**
+ * Program wizualizujacy trajektorie pobrana, trajektorie modelowe i rozpoznaje trajektorie
+ */
 int main (int argc, char **argv) {  
 	for(int i = 0; i < 256; ++i)
 		keyStates[i] = false;
@@ -111,10 +120,26 @@ bool loadFile(){
 
 		newSample->prepareAllTrajectories();
 
-		cout << endl << "Podaj prawdziwy indeks trajektorii:"<< endl;
-		cout << "LINE: 0\tSPIRAL:1\tCIRCLE:2\tZIGZAG:3\tARC:4"<<endl;
-		cin >> newSample->realIndex;
-
+		if(newSample->fileName.find("line") != string::npos){
+			newSample->realIndex = 0;
+		}
+		else if(newSample->fileName.find("spiral") != string::npos){
+			newSample->realIndex = 1;
+		}
+		else if(newSample->fileName.find("circle") != string::npos){
+			newSample->realIndex = 2;
+		}
+		else if(newSample->fileName.find("zig") != string::npos){
+			newSample->realIndex = 3;
+		}
+		else if(newSample->fileName.find("arc") != string::npos){
+			newSample->realIndex = 4;
+		}
+		else{
+			cout << endl << "Podaj prawdziwy indeks trajektorii:"<< endl;
+			cout << "LINE: 0\tSPIRAL:1\tCIRCLE:2\tZIGZAG:3\tARC:4"<<endl;
+			cin >> newSample->realIndex;
+		}
 		trajFactory.fitModelTrajectories(newSample);
 		newSample->recognize();
 		newSample->showStats();
@@ -130,10 +155,13 @@ bool loadFile(){
 /////////////////////////////// WYSWIETLANIE /////////////////////////////////////
 void renderPrimitive () {
 
+	//glTranslatef(320.0f, 0, 0);
 	
 	glPushMatrix();
-	glScalef(scale,scale,-scale);
 	
+	//glTranslatef(320.0f, 0, 0);
+	glScalef(scale,scale,-scale);
+	//glTranslatef(-320.0f, 0, 0);
 
 	// SCENA //
 	glColor3f(1.0f, 1.0f, 1.0f);
@@ -172,10 +200,10 @@ void renderPrimitive () {
 				drawTrajectoryWithColor(1.0f, 1.0f, 0.0f, sample->originalPoints);
 			}
 			if(sampleToShow & 2){
-				drawTrajectoryWithColor(0.0f, 1.0f, 1.0f, sample->filteredTrajectory.points);
+				drawTrajectoryWithColor(0.0f, 0.0f, 1.0f, sample->filteredTrajectory.points);
 			}
 			if(sampleToShow & 4){
-				drawTrajectoryWithColor(0.0f, 0.0f, 1.0f, sample->kalmanTrajectory.points);
+				drawTrajectoryWithColor(0.0f, 1.0f, 1.0f, sample->kalmanTrajectory.points);
 			}
 			if(sampleToShow & 8){
 				drawTrajectoryWithColor(1.0f, 0.0f, 1.0f, sample->kalman3Trajectory.points);
@@ -193,8 +221,8 @@ void renderPrimitive () {
 				return;
 			}
 			if(testedTrajectory == 1){
-				drawTrajectoryWithColor(1.0f, 1.0f, 0.0f, sample->filteredTrajectory.points);
-				drawTrajectoryWithColor(1.0f, 0.0f, 0.0f, sample->filteredTrajectory.fittedModels[modelTrajektoryNr]->points);
+				drawTrajectoryWithColor(1.0f, 0.0f, 0.0f, sample->filteredTrajectory.points);
+				drawTrajectoryWithColor(0.0f, 1.0f, 0.0f, sample->filteredTrajectory.fittedModels[modelTrajektoryNr]->points);
 			}
 			else if(testedTrajectory == 2){
 				drawTrajectoryWithColor(0.0f, 1.0f, 1.0f, sample->kalmanTrajectory.points);
@@ -206,7 +234,7 @@ void renderPrimitive () {
 			}
 		}
 	}
-
+	
 	glPopMatrix();
 }
 
@@ -279,6 +307,7 @@ void renderStrings(){
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)"badana: ");
 		glutBitmapString(GLUT_BITMAP_HELVETICA_12, (const unsigned char*)TrajectorySample::trajName[testedTrajectory]);
 	}
+	
 }
 
 ///////////////////////////////// WYBOR AKCJI /////////////////////////////////
@@ -340,6 +369,10 @@ void keyOperations (void) {
 	}else if(keyStates['5']){
 		modelTrajektoryNr = 4;
 		keyStates['5'] = false;
+	}
+	else if(keyStates['g']){
+		saveAllStat();
+		keyStates['g'] = false;
 	}
 	else if(viewState == TRAJECTORIES){
 		if(keyStates['z']){
@@ -409,12 +442,56 @@ void saveCurrentStat(){
 
 void saveAllStat(){
 
+	std::stringstream statsStr;
+
+	statsStr << endl << ".....ALL....." << endl << endl;
+
+	int percentF = 0;
+	int percentK = 0;
+	int percentK3 = 0;
+
+	for(int i = 0; i < samples.size(); ++i){
+	
+		TrajectorySample * sam = samples[i];
+		statsStr << sam->fileName << endl;
+		statsStr << "\treal: " << sam->realIndex << endl;
+		statsStr << "\tfiltered:\t" << sam->filteredTrajectory.recognizedIndex << endl;
+		statsStr << "\tkalman:\t\t" << sam->kalmanTrajectory.recognizedIndex << endl;
+		statsStr << "\tkalman3x:\t" << sam->kalman3Trajectory.recognizedIndex << endl<<endl;
+
+		if(sam->realIndex == sam->filteredTrajectory.recognizedIndex)
+			percentF++;
+		if(sam->realIndex == sam->kalmanTrajectory.recognizedIndex)
+			percentK++;
+		if(sam->realIndex == sam->kalman3Trajectory.recognizedIndex)
+			percentK3++;
+	}
+
+	percentF = percentF*100/samples.size();
+	percentK = percentK*100/samples.size();
+	percentK3 = percentK3*100/samples.size();
+
+	statsStr << endl << endl << "Procent filtered:\t" << percentF << endl;
+	statsStr << endl << "Procent kalman:\t" << percentK << endl;
+	statsStr << endl << "Procent kalman3:\t" << percentK3 << endl << endl;
+
+	cout << statsStr.str();
+
+	std::string filename = "all_stats.txt";
+
+	ofstream file (filename.c_str());
+
+    if(file.is_open()) {
+		file << statsStr.str();
+		file.close();
+	}
 }
 
 
 /////////////////////////////// FUNCKJE OPENGL ////////////////////
 void drawTrajectoryWithColor(float r, float g, float b, vector<Point3D> & trajectory){
 	glBegin(GL_LINES);
+	
 	glPointSize(2.0f);  
 	glColor3f(r, g, b);
 	
@@ -426,6 +503,7 @@ void drawTrajectoryWithColor(float r, float g, float b, vector<Point3D> & trajec
 	}
 	
 	glEnd();
+	glLineWidth(2.0f);
 }
 
 void keyPressed (unsigned char key, int x, int y) {  
@@ -451,6 +529,7 @@ void display (void) {
 
 	
 	renderPrimitive(); // Render the primitive
+	//glTranslatef(320.0f, 0.0f, 0.0f); 
 	
 
     glMatrixMode(GL_PROJECTION);   //select the Projection matrix
