@@ -1,0 +1,1 @@
+It's my masters thesis. I examine different stereo correspondance algoritmgs, a few of the implemented in opencv, others - are my own simple ones where hand segmentation is very important. Therefore this program uses and checks the reliability of different skin segmentation algorithms.
